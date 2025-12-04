@@ -234,7 +234,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        // Added getDocs import for deletion query
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -426,19 +427,30 @@
             requestDeleteTrip: (e, id) => {
                 e.stopPropagation();
                 pendingAction = async () => {
-                    // Delete trip doc
-                    await deleteDoc(doc(db, "trips", id));
-                    // Note: In a real app, you'd use a Cloud Function or batch delete to remove sub-expenses.
-                    // For now, we just remove the trip reference from UI. The orphaned expenses remain in DB unless cleaned.
-                    if(currentTripId === id) {
-                        currentTripId = null;
-                        document.getElementById('trip-title').innerText = "Select a Trip";
-                        document.getElementById('tab-expenses').innerHTML = '<div class="text-center text-slate-400 mt-10">Select a trip</div>';
-                        if(window.innerWidth < 768) window.app.navigateTo('view-dashboard');
+                    try {
+                        // 1. Delete associated expenses first (Client-side Cascade)
+                        const expensesQuery = query(collection(db, "expenses"), where("tripId", "==", id));
+                        const expensesSnapshot = await getDocs(expensesQuery);
+                        
+                        const deletePromises = expensesSnapshot.docs.map(d => deleteDoc(doc(db, "expenses", d.id)));
+                        await Promise.all(deletePromises);
+
+                        // 2. Delete trip doc
+                        await deleteDoc(doc(db, "trips", id));
+
+                        if(currentTripId === id) {
+                            currentTripId = null;
+                            document.getElementById('trip-title').innerText = "Select a Trip";
+                            document.getElementById('tab-expenses').innerHTML = '<div class="text-center text-slate-400 mt-10">Select a trip</div>';
+                            if(window.innerWidth < 768) window.app.navigateTo('view-dashboard');
+                        }
+                        ui.showToast('Trip and all expenses deleted');
+                    } catch (error) {
+                        console.error("Error deleting trip:", error);
+                        ui.showToast("Error deleting trip", "error");
                     }
-                    ui.showToast('Trip deleted');
                 };
-                document.getElementById('confirm-message').innerText = "Delete this trip?";
+                document.getElementById('confirm-message').innerText = "Delete this trip and all its expenses?";
                 document.getElementById('modal-confirm').classList.remove('hidden');
             },
             requestDeleteExpense: (id) => {
