@@ -151,8 +151,8 @@
                     </div>
                 </div>
 
-                <!-- FAB -->
-                <button onclick="window.app.openModal('modal-add-expense')" class="absolute bottom-6 right-6 h-14 w-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-2xl z-30 transition transform hover:scale-110 active:scale-95">
+                <!-- FAB: Added 'bottom-24' for mobile (Android Chrome bar avoidance) and 'md:bottom-6' for desktop -->
+                <button onclick="window.app.openModal('modal-add-expense')" class="absolute bottom-24 md:bottom-6 right-6 h-14 w-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-2xl z-30 transition transform hover:scale-110 active:scale-95">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
@@ -252,7 +252,13 @@
         const db = getFirestore(app);
 
         // --- GLOBAL VARIABLES (Window Scope) ---
-        let RATES = { 'USD': 1.0, 'EUR': 0.95, 'GBP': 0.79, 'JPY': 150.0, 'CNY': 7.15, 'MYR': 4.45, 'SGD': 1.35 };
+        // Enhanced Rates List
+        let RATES = { 
+            'USD': 1.0, 'EUR': 0.95, 'GBP': 0.79, 'JPY': 150.0, 'CNY': 7.15,
+            'MYR': 4.45, 'SGD': 1.35, 'AUD': 1.52, 'CAD': 1.36, 'CHF': 0.88,
+            'INR': 83.3, 'HKD': 7.82, 'NZD': 1.63, 'THB': 35.5, 'IDR': 15500,
+            'VND': 24500, 'PHP': 55.8, 'KRW': 1300
+        };
         let CURRENCY_CODES = Object.keys(RATES).sort();
         let USING_LIVE_RATES = false;
         const DEFAULT_API_KEY = 'fca_live_yHV7zero5t3xM8wjgSS4tWx6ELu5QV6CcaaZjRgi';
@@ -330,14 +336,9 @@
             // FIRESTORE LISTENERS
             setupRealtimeListeners: (user) => {
                 // 1. Listen to Trips
-                // NOTE: Sorting logic moved to JS if needed, but simple orderBy on one field is usually fine.
-                // However, let's keep it safe.
-                const q = query(collection(db, "trips"));
+                const q = query(collection(db, "trips"), orderBy("createdAt", "desc"));
                 unsubscribeTrips = onSnapshot(q, (snapshot) => {
                     localTrips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    // Sort locally
-                    localTrips.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                    
                     window.app.renderTripList();
                     // On desktop, auto-open first trip if none selected
                     if(window.innerWidth >= 768 && !currentTripId && localTrips.length > 0) {
@@ -348,18 +349,15 @@
             listenToExpenses: (tripId) => {
                 if(unsubscribeExpenses) unsubscribeExpenses();
                 // 2. Listen to Expenses for specific trip
-                // REMOVE orderBy("date", "desc") here to fix the index error.
-                // We will sort in Javascript instead.
+                // REMOVED orderBy("date", "desc") to fix missing index error
                 const q = query(collection(db, "expenses"), where("tripId", "==", tripId));
-                
                 unsubscribeExpenses = onSnapshot(q, (snapshot) => {
                     localExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    
-                    // Client-side sorting because we can't create composite indexes dynamically in this env
-                    localExpenses.sort((a, b) => {
+                    // Client-side sorting
+                    localExpenses.sort((a,b) => {
                         const dateA = a.date ? a.date.seconds : 0;
                         const dateB = b.date ? b.date.seconds : 0;
-                        return dateB - dateA; // Descending
+                        return dateB - dateA; // DESC
                     });
 
                     window.app.renderExpenses();
