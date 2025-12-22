@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,35 +11,72 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
-        body { background-color: #f1f5f9; }
-        .slide-in { animation: slideIn 0.3s ease-out forwards; }
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        body {
+            background-color: #f1f5f9;
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
+
 <body class="text-slate-800 h-screen flex flex-col overflow-hidden font-sans">
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[70] pointer-events-none w-full max-w-sm px-4"></div>
+    <div id="toast-container"
+        class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[70] pointer-events-none w-full max-w-sm px-4"></div>
 
     <!-- VIEW: LOGIN (Full Screen) -->
     <section id="view-login" class="absolute inset-0 z-50 bg-slate-50 flex flex-col justify-center items-center p-6">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center border border-slate-100">
-            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+            <div
+                class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
                 <i class="fa-solid fa-wallet"></i>
             </div>
             <h1 class="text-3xl font-bold mb-2 text-slate-900 tracking-tight">ShareShare Bill</h1>
             <p class="text-slate-500 mb-8">Effortless group expense tracking.</p>
-            
-            <input type="email" id="login-email" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="Email">
-            <input type="password" id="login-pass" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="Password">
-            
-            <button id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-200 active:scale-[0.98]">
+
+            <input type="email" id="login-email"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                placeholder="Email">
+            <input type="password" id="login-pass"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                placeholder="Password">
+
+            <button id="btn-login"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-200 active:scale-[0.98]">
                 Login
             </button>
             <p id="login-error" class="text-red-500 text-sm mt-4 hidden"></p>
@@ -48,16 +86,23 @@
 
     <!-- MAIN APP LAYOUT -->
     <div id="app-layout" class="flex h-full hidden">
-        
+
         <!-- SIDEBAR -->
-        <aside id="view-dashboard" class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-10 shadow-lg md:shadow-none absolute md:relative inset-0 md:inset-auto">
+        <aside id="view-dashboard"
+            class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-10 shadow-lg md:shadow-none absolute md:relative inset-0 md:inset-auto">
             <header class="bg-white px-6 py-4 flex justify-between items-center border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                    <div class="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm"><i
+                            class="fa-solid fa-wallet"></i></div>
                     <h2 class="text-xl font-bold text-slate-800">My Trips</h2>
                 </div>
                 <div class="flex gap-2">
-                    <button id="btn-logout" class="text-slate-400 hover:text-red-500 text-sm transition p-2">
+                    <button onclick="window.app.openModal('modal-settings')"
+                        class="text-slate-400 hover:text-indigo-600 text-sm transition p-2" title="Settings">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <button id="btn-logout" class="text-slate-400 hover:text-red-500 text-sm transition p-2"
+                        title="Logout">
                         <i class="fa-solid fa-sign-out-alt"></i>
                     </button>
                 </div>
@@ -68,43 +113,53 @@
             </div>
 
             <div class="p-4 bg-white border-t border-slate-100">
-                <button onclick="window.app.openModal('modal-create-trip')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition active:scale-[0.98] flex items-center justify-center gap-2">
+                <button onclick="window.app.openModal('modal-create-trip')"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition active:scale-[0.98] flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus"></i> New Trip
                 </button>
             </div>
         </aside>
 
         <!-- MAIN CONTENT -->
-        <main id="view-trip" class="flex-1 bg-slate-100 flex flex-col relative hidden md:flex w-full absolute md:relative inset-0 z-20 md:z-0">
-            
+        <main id="view-trip"
+            class="flex-1 bg-slate-100 flex flex-col relative hidden md:flex w-full absolute md:relative inset-0 z-20 md:z-0">
+
             <!-- Trip Header -->
-            <div class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm sticky top-0 z-20">
+            <div
+                class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm sticky top-0 z-20">
                 <div class="flex items-center gap-4">
-                    <button onclick="window.app.navigateTo('view-dashboard')" class="md:hidden text-slate-500 hover:text-slate-800"><i class="fa-solid fa-arrow-left fa-lg"></i></button>
+                    <button onclick="window.app.navigateTo('view-dashboard')"
+                        class="md:hidden text-slate-500 hover:text-slate-800"><i
+                            class="fa-solid fa-arrow-left fa-lg"></i></button>
                     <div>
                         <h2 id="trip-title" class="text-2xl font-bold text-slate-800 leading-tight">Select a Trip</h2>
                         <div class="flex items-center gap-2 text-sm text-slate-500">
-                            <span id="trip-base-currency" class="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono font-bold text-slate-600">---</span>
+                            <span id="trip-base-currency"
+                                class="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono font-bold text-slate-600">---</span>
                             <span id="trip-member-count">0 Members</span>
-                            <button onclick="window.app.openModal('modal-members')" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold ml-2 underline">Manage</button>
+                            <button onclick="window.app.openModal('modal-members')"
+                                class="text-indigo-600 hover:text-indigo-800 text-xs font-bold ml-2 underline">Manage</button>
                         </div>
                     </div>
                 </div>
                 <div class="text-right">
-                     <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Spent</p>
-                     <p id="trip-total-spent" class="text-xl font-bold text-indigo-600">0.00</p>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Spent</p>
+                    <p id="trip-total-spent" class="text-xl font-bold text-indigo-600">0.00</p>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="flex px-6 bg-white border-b border-slate-200">
-                <button onclick="window.app.switchTab('expenses')" id="tab-btn-expenses" class="px-6 py-3 font-medium text-sm border-b-2 border-indigo-600 text-indigo-600 transition">Expenses</button>
-                <button onclick="window.app.switchTab('settle')" id="tab-btn-settle" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Settle Up</button>
+                <button onclick="window.app.switchTab('expenses')" id="tab-btn-expenses"
+                    class="px-6 py-3 font-medium text-sm border-b-2 border-indigo-600 text-indigo-600 transition">Expenses</button>
+                <button onclick="window.app.switchTab('settle')" id="tab-btn-settle"
+                    class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Settle
+                    Up</button>
             </div>
 
             <!-- Content Area -->
             <div class="flex-1 overflow-hidden relative">
-                
+
                 <!-- Tab: Expenses -->
                 <div id="tab-expenses" class="h-full overflow-y-auto p-4 pb-24 md:pb-6 space-y-3">
                     <div class="text-center text-slate-400 mt-10">Select a trip to view expenses</div>
@@ -112,7 +167,7 @@
 
                 <!-- Tab: Settle -->
                 <div id="tab-settle" class="h-full overflow-y-auto p-4 pb-24 md:pb-6 space-y-6 hidden">
-                    
+
                     <!-- Settlement Controls -->
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                         <div class="flex justify-between items-center mb-4">
@@ -120,18 +175,26 @@
                                 <i class="fa-solid fa-scale-balanced text-indigo-500"></i> Settlement Plan
                             </h3>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-slate-500 text-right leading-tight">Consolidate<br>Currency</span>
-                                <button onclick="window.app.toggleConsolidation()" id="btn-consolidate" class="w-10 h-6 rounded-full bg-slate-300 relative transition-colors duration-200">
-                                    <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 shadow transition-transform duration-200 transform"></div>
+                                <span
+                                    class="text-xs font-bold text-slate-500 text-right leading-tight">Consolidate<br>Currency</span>
+                                <button onclick="window.app.toggleConsolidation()" id="btn-consolidate"
+                                    class="w-10 h-6 rounded-full bg-slate-300 relative transition-colors duration-200">
+                                    <div
+                                        class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 shadow transition-transform duration-200 transform">
+                                    </div>
                                 </button>
                             </div>
                         </div>
 
-                        <div id="consolidation-options" class="hidden mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Calculate everything in:</label>
-                            <select id="settle-currency-select" onchange="window.app.renderSettlement()" class="w-full bg-white border border-slate-200 rounded p-2 text-sm font-mono"></select>
+                        <div id="consolidation-options"
+                            class="hidden mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Calculate everything
+                                in:</label>
+                            <select id="settle-currency-select" onchange="window.app.renderSettlement()"
+                                class="w-full bg-white border border-slate-200 rounded p-2 text-sm font-mono"></select>
                             <div class="flex justify-between mt-2">
-                                <p id="rates-source-label" class="text-[10px] text-slate-400 text-right">Source: Offline Mock Data</p>
+                                <p id="rates-source-label" class="text-[10px] text-slate-400 text-right">Source: Offline
+                                    Mock Data</p>
                             </div>
                         </div>
 
@@ -152,7 +215,8 @@
                 </div>
 
                 <!-- FAB: Added 'bottom-24' for mobile (Android Chrome bar avoidance) and 'md:bottom-6' for desktop -->
-                <button onclick="window.app.openModal('modal-add-expense')" class="absolute bottom-24 md:bottom-6 right-6 h-14 w-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-2xl z-30 transition transform hover:scale-110 active:scale-95">
+                <button onclick="window.app.openModal('modal-add-expense')"
+                    class="absolute bottom-24 md:bottom-6 right-6 h-14 w-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-2xl z-30 transition transform hover:scale-110 active:scale-95">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
@@ -161,71 +225,137 @@
 
     <!-- MODALs (Keep same structure, just IDs referenced in JS) -->
     <!-- Modal: Confirmation -->
-    <div id="modal-confirm" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div id="modal-confirm"
+        class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center slide-in">
-            <div class="w-12 h-12 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div
+                class="w-12 h-12 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-xl mb-4">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
             <h3 class="text-lg font-bold text-slate-800 mb-2">Are you sure?</h3>
             <p id="confirm-message" class="text-slate-500 text-sm mb-6">This action cannot be undone.</p>
             <div class="flex gap-3">
-                <button onclick="window.app.closeModals()" class="flex-1 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancel</button>
-                <button onclick="window.app.executeConfirm()" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-md">Yes, Delete</button>
+                <button onclick="window.app.closeModals()"
+                    class="flex-1 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancel</button>
+                <button onclick="window.app.executeConfirm()"
+                    class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-md">Yes,
+                    Delete</button>
             </div>
         </div>
     </div>
 
     <!-- Modal: Create Trip -->
-    <div id="modal-create-trip" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div id="modal-create-trip"
+        class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden slide-in">
             <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
                 <h3 class="font-bold text-lg text-slate-800">Start New Trip</h3>
-                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark fa-lg"></i></button>
+                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
             <div class="p-6 space-y-4">
-                <div><label class="block text-sm font-bold text-slate-700 mb-1">Trip Name</label><input type="text" id="new-trip-name" class="w-full border rounded-lg px-3 py-2 outline-none"></div>
-                <div><label class="block text-sm font-bold text-slate-700 mb-1">Base Currency</label><select id="new-trip-currency" class="w-full border rounded-lg px-3 py-2 bg-white"></select></div>
-                <div><label class="block text-sm font-bold text-slate-700 mb-1">Members</label><input type="text" id="new-trip-members" class="w-full border rounded-lg px-3 py-2 outline-none" placeholder="Alice, Bob..."></div>
-                <button onclick="window.app.createTrip()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl mt-2 shadow-md">Create Trip</button>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Trip Name</label><input type="text"
+                        id="new-trip-name" class="w-full border rounded-lg px-3 py-2 outline-none"></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Base Currency</label><select
+                        id="new-trip-currency" class="w-full border rounded-lg px-3 py-2 bg-white"></select></div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Members</label><input type="text"
+                        id="new-trip-members" class="w-full border rounded-lg px-3 py-2 outline-none"
+                        placeholder="Alice, Bob..."></div>
+                <button onclick="window.app.createTrip()"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl mt-2 shadow-md">Create
+                    Trip</button>
             </div>
         </div>
     </div>
 
     <!-- Modal: Manage Members -->
-    <div id="modal-members" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div id="modal-members"
+        class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden slide-in">
-             <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
+            <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
                 <h3 class="font-bold text-lg text-slate-800">Manage Members</h3>
-                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-4 bg-slate-50 border-b">
                 <div class="flex gap-2">
-                    <input type="text" id="add-member-input" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="New member name">
-                    <button onclick="window.app.addMember()" class="bg-indigo-600 text-white px-4 rounded-lg text-sm font-bold hover:bg-indigo-700">Add</button>
+                    <input type="text" id="add-member-input" class="flex-1 border rounded-lg px-3 py-2 text-sm"
+                        placeholder="Name or email to invite">
+                    <button onclick="window.app.addMember()"
+                        class="bg-indigo-600 text-white px-4 rounded-lg text-sm font-bold hover:bg-indigo-700">Add</button>
                 </div>
             </div>
             <div id="members-list-manage" class="p-0 max-h-60 overflow-y-auto"></div>
         </div>
     </div>
 
+    <!-- Modal: Settings -->
+    <div id="modal-settings"
+        class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden slide-in">
+            <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">Settings</h3>
+                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Display Name</label>
+                    <input type="text" id="setting-display-name" class="w-full border rounded-lg px-3 py-2 outline-none"
+                        placeholder="Your Name">
+                    <p class="text-xs text-slate-400 mt-1">This name will be shown to your trip members instead of
+                        your
+                        email.</p>
+                </div>
+                <button onclick="window.app.saveSettings()"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md">Save
+                    Settings</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Add Expense -->
-    <div id="modal-add-expense" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden slide-in max-h-[90vh] overflow-y-auto flex flex-col">
+    <div id="modal-add-expense"
+        class="fixed inset-0 bg-black/60 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden slide-in max-h-[90vh] overflow-y-auto flex flex-col">
             <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center sticky top-0 z-10">
                 <h3 id="expense-modal-title" class="font-bold text-lg text-slate-800">Add Expense</h3>
-                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark fa-lg"></i></button>
+                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
             <div class="p-6 space-y-5">
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label><input type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none" placeholder="Dinner"></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label><input
+                        type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none"
+                        placeholder="Dinner"></div>
                 <div class="flex gap-3">
-                    <div class="flex-1"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount</label><input type="number" id="exp-amount" step="0.01" class="w-full border rounded-xl px-3 py-3 outline-none text-xl font-bold" placeholder="0.00"></div>
-                    <div class="w-28"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label><select id="exp-currency" class="w-full border rounded-xl px-2 py-3 bg-white font-mono h-[54px] text-sm"></select></div>
+                    <div class="flex-1"><label
+                            class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount</label><input
+                            type="number" id="exp-amount" step="0.01"
+                            class="w-full border rounded-xl px-3 py-3 outline-none text-xl font-bold"
+                            placeholder="0.00"></div>
+                    <div class="w-28"><label
+                            class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label><select
+                            id="exp-currency"
+                            class="w-full border rounded-xl px-2 py-3 bg-white font-mono h-[54px] text-sm"></select>
+                    </div>
                 </div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Paid By</label><select id="exp-payer" class="w-full border rounded-xl px-3 py-3 bg-white"></select></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label><div class="grid grid-cols-3 gap-3" id="category-grid"></div><input type="hidden" id="exp-category" value="Food"></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Paid By</label><select
+                        id="exp-payer" class="w-full border rounded-xl px-3 py-3 bg-white"></select></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
+                    <div class="grid grid-cols-3 gap-3" id="category-grid"></div><input type="hidden" id="exp-category"
+                        value="Food">
+                </div>
                 <div class="bg-indigo-50 p-3 rounded-xl flex items-center gap-3 border border-indigo-100">
                     <input type="checkbox" id="exp-not-shared" class="w-5 h-5 text-indigo-600 rounded">
-                    <div><label for="exp-not-shared" class="text-sm font-bold text-slate-800">Personal Expense</label><p class="text-xs text-slate-500">Don't split this with the group.</p></div>
+                    <div><label for="exp-not-shared" class="text-sm font-bold text-slate-800">Personal
+                            Expense</label>
+                        <p class="text-xs text-slate-500">Don't split this with the group.</p>
+                    </div>
                 </div>
-                <button onclick="window.app.saveExpense()" id="expense-modal-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-md">Save Expense</button>
+                <button onclick="window.app.saveExpense()" id="expense-modal-btn"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-md">Save
+                    Expense</button>
             </div>
         </div>
     </div>
@@ -235,7 +365,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         // Added getDocs import for deletion query
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -254,7 +384,7 @@
 
         // --- GLOBAL VARIABLES (Window Scope) ---
         // Enhanced Rates List
-        let RATES = { 
+        let RATES = {
             'USD': 1.0, 'EUR': 0.95, 'GBP': 0.79, 'JPY': 150.0, 'CNY': 7.15,
             'MYR': 4.45, 'SGD': 1.35, 'AUD': 1.52, 'CAD': 1.36, 'CHF': 0.88,
             'INR': 83.3, 'HKD': 7.82, 'NZD': 1.63, 'THB': 35.5, 'IDR': 15500,
@@ -276,10 +406,12 @@
         // LOCAL STATE (Synced with Firebase)
         let localTrips = [];
         let localExpenses = [];
+        let userProfiles = {}; // Cache for { email: displayName }
         let currentTripId = null;
         let currentUser = null;
         let unsubscribeTrips = null;
         let unsubscribeExpenses = null;
+        let unsubscribeUsers = null;
         let charts = { cat: null, payer: null };
         let state = { consolidate: false };
         let pendingAction = null;
@@ -292,16 +424,18 @@
                 document.getElementById('view-login').classList.add('hidden');
                 document.getElementById('app-layout').classList.remove('hidden');
                 window.app.setupRealtimeListeners(user);
+                window.app.listenToUsers();
                 window.app.refreshCurrencyDropdowns();
-                if(window.innerWidth >= 768) {
+                if (window.innerWidth >= 768) {
                     // Try open first trip if exists after data loads (handled in snapshot)
                 }
             } else {
                 currentUser = null;
                 document.getElementById('view-login').classList.remove('hidden');
                 document.getElementById('app-layout').classList.add('hidden');
-                if(unsubscribeTrips) unsubscribeTrips();
-                if(unsubscribeExpenses) unsubscribeExpenses();
+                if (unsubscribeTrips) unsubscribeTrips();
+                if (unsubscribeExpenses) unsubscribeExpenses();
+                if (unsubscribeUsers) unsubscribeUsers();
             }
         });
 
@@ -313,7 +447,7 @@
                 const pass = document.getElementById('login-pass').value;
                 const errorText = document.getElementById('login-error');
                 const btn = document.getElementById('btn-login');
-                
+
                 if (!email || !pass) {
                     errorText.innerText = "Please fill in all fields";
                     errorText.classList.remove('hidden');
@@ -337,25 +471,37 @@
             // FIRESTORE LISTENERS
             setupRealtimeListeners: (user) => {
                 // 1. Listen to Trips
-                const q = query(collection(db, "trips"), orderBy("createdAt", "desc"));
+                // 1. Listen to Trips
+                // MODIFIED: Filter by member array containing current user's email
+                // REMOVED orderBy("createdAt", "desc") to avoid composite index requirements with array-contains
+                const q = query(collection(db, "trips"), where("members", "array-contains", user.email));
+
                 unsubscribeTrips = onSnapshot(q, (snapshot) => {
                     localTrips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // Client-side sorting (Newest first)
+                    localTrips.sort((a, b) => {
+                        const dateA = a.createdAt ? a.createdAt.seconds : 0;
+                        const dateB = b.createdAt ? b.createdAt.seconds : 0;
+                        return dateB - dateA;
+                    });
+
                     window.app.renderTripList();
                     // On desktop, auto-open first trip if none selected
-                    if(window.innerWidth >= 768 && !currentTripId && localTrips.length > 0) {
+                    if (window.innerWidth >= 768 && !currentTripId && localTrips.length > 0) {
                         window.app.openTrip(localTrips[0].id);
                     }
                 });
             },
             listenToExpenses: (tripId) => {
-                if(unsubscribeExpenses) unsubscribeExpenses();
+                if (unsubscribeExpenses) unsubscribeExpenses();
                 // 2. Listen to Expenses for specific trip
                 // REMOVED orderBy("date", "desc") to fix missing index error
                 const q = query(collection(db, "expenses"), where("tripId", "==", tripId));
                 unsubscribeExpenses = onSnapshot(q, (snapshot) => {
                     localExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     // Client-side sorting
-                    localExpenses.sort((a,b) => {
+                    localExpenses.sort((a, b) => {
                         const dateA = a.date ? a.date.seconds : 0;
                         const dateB = b.date ? b.date.seconds : 0;
                         return dateB - dateA; // DESC
@@ -363,8 +509,29 @@
 
                     window.app.renderExpenses();
                     window.app.updateHeaderStats();
-                    if(!document.getElementById('tab-settle').classList.contains('hidden')) {
+                    if (!document.getElementById('tab-settle').classList.contains('hidden')) {
                         window.app.renderSettlement();
+                    }
+                });
+            },
+
+            listenToUsers: () => {
+                // Listen to all users for name resolution (Optimized: in production, should only listen to relevant users)
+                // For this scale, listening to "users" collection is fine.
+                const q = collection(db, "users");
+                unsubscribeUsers = onSnapshot(q, (snapshot) => {
+                    userProfiles = {};
+                    snapshot.docs.forEach(doc => {
+                        userProfiles[doc.id] = doc.data().displayName;
+                    });
+                    // Refresh UIs
+                    window.app.renderTripList();
+                    if (currentTripId) {
+                        window.app.renderManageMembers();
+                        window.app.renderExpenses();
+                        if (!document.getElementById('tab-settle').classList.contains('hidden')) {
+                            window.app.renderSettlement();
+                        }
                     }
                 });
             },
@@ -388,7 +555,7 @@
                     window.app.closeModals();
                     ui.showToast('Trip created!');
                     window.app.openTrip(docRef.id);
-                } catch(e) {
+                } catch (e) {
                     ui.showToast("Error creating trip: " + e.message, 'error');
                 }
             },
@@ -420,7 +587,7 @@
                         ui.showToast('Expense saved');
                     }
                     window.app.closeModals();
-                } catch(e) {
+                } catch (e) {
                     ui.showToast("Error saving: " + e.message, 'error');
                 }
             },
@@ -431,18 +598,18 @@
                         // 1. Delete associated expenses first (Client-side Cascade)
                         const expensesQuery = query(collection(db, "expenses"), where("tripId", "==", id));
                         const expensesSnapshot = await getDocs(expensesQuery);
-                        
+
                         const deletePromises = expensesSnapshot.docs.map(d => deleteDoc(doc(db, "expenses", d.id)));
                         await Promise.all(deletePromises);
 
                         // 2. Delete trip doc
                         await deleteDoc(doc(db, "trips", id));
 
-                        if(currentTripId === id) {
+                        if (currentTripId === id) {
                             currentTripId = null;
                             document.getElementById('trip-title').innerText = "Select a Trip";
                             document.getElementById('tab-expenses').innerHTML = '<div class="text-center text-slate-400 mt-10">Select a trip</div>';
-                            if(window.innerWidth < 768) window.app.navigateTo('view-dashboard');
+                            if (window.innerWidth < 768) window.app.navigateTo('view-dashboard');
                         }
                         ui.showToast('Trip and all expenses deleted');
                     } catch (error) {
@@ -462,16 +629,16 @@
                 document.getElementById('modal-confirm').classList.remove('hidden');
             },
             executeConfirm: () => {
-                if(pendingAction) pendingAction();
+                if (pendingAction) pendingAction();
                 pendingAction = null;
                 window.app.closeModals();
             },
             addMember: async () => {
                 const input = document.getElementById('add-member-input');
                 const name = input.value.trim();
-                if(!name) return;
+                if (!name) return;
                 const trip = localTrips.find(t => t.id === currentTripId);
-                if(!trip.members.includes(name)) {
+                if (!trip.members.includes(name)) {
                     const newMembers = [...trip.members, name];
                     await updateDoc(doc(db, "trips", currentTripId), { members: newMembers });
                     input.value = '';
@@ -485,6 +652,25 @@
                 await updateDoc(doc(db, "trips", currentTripId), { members: newMembers });
                 window.app.renderManageMembers();
                 ui.showToast(`${name} removed.`);
+            },
+            saveSettings: async () => {
+                const name = document.getElementById('setting-display-name').value.trim();
+                if (!name) return;
+                try {
+                    await setDoc(doc(db, "users", currentUser), { displayName: name }, { merge: true });
+                    ui.showToast('Profile updated!');
+                    window.app.closeModals();
+                } catch (e) {
+                    ui.showToast("Error updating profile", "error");
+                }
+            },
+            getDisplayName: (emailOrName) => {
+                if (!emailOrName) return 'Unknown';
+                if (emailOrName === currentUser) return 'You';
+                if (emailOrName.includes('@')) {
+                    return (userProfiles && userProfiles[emailOrName]) || emailOrName;
+                }
+                return emailOrName;
             },
 
             // --- VIEW LOGIC ---
@@ -513,7 +699,9 @@
                             <p class="text-xs text-slate-500 mt-1">${trip.members.length} people • ${trip.currency}</p>
                         </div>
                         <div class="flex items-center gap-2 relative z-10">
-                            <button onclick="window.app.requestDeleteTrip(event, '${trip.id}')" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-red-100 hover:text-red-500 transition active:bg-red-200"><i class="fa-solid fa-trash-can"></i></button>
+                            ${trip.createdBy === currentUser ?
+                            `<button onclick="window.app.requestDeleteTrip(event, '${trip.id}')" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-red-100 hover:text-red-500 transition active:bg-red-200"><i class="fa-solid fa-trash-can"></i></button>`
+                            : ''}
                         </div>
                     `;
                     container.appendChild(el);
@@ -521,13 +709,13 @@
             },
             openTrip: (id) => {
                 currentTripId = id;
-                window.app.renderTripList(); 
+                window.app.renderTripList();
                 const trip = localTrips.find(t => t.id === id);
-                if(!trip) return;
+                if (!trip) return;
 
                 document.getElementById('trip-title').innerText = trip.name;
                 document.getElementById('trip-base-currency').innerText = trip.currency;
-                
+
                 // Start listening to expenses for this trip
                 window.app.listenToExpenses(id);
 
@@ -536,7 +724,7 @@
             },
             updateHeaderStats: () => {
                 const trip = localTrips.find(t => t.id === currentTripId);
-                if(!trip) return;
+                if (!trip) return;
                 document.getElementById('trip-member-count').innerText = `${trip.members.length} Members`;
                 let total = 0;
                 localExpenses.forEach(e => total += util.convert(e.amount, e.currency, trip.currency));
@@ -557,13 +745,13 @@
                         <div class="h-10 w-10 rounded-full ${catObj.color} flex items-center justify-center shrink-0 border border-white shadow-sm"><i class="fa-solid ${catObj.icon}"></i></div>
                         <div class="flex-1 min-w-0">
                             <h4 class="font-bold text-slate-800 truncate">${exp.desc}</h4>
-                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${exp.payer === currentUser ? 'You' : exp.payer}</span> • ${exp.notShared ? '<span class="text-red-500 font-bold">Personal</span>' : 'Shared'}</p>
+                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(exp.payer)}</span> • ${exp.notShared ? '<span class="text-red-500 font-bold">Personal</span>' : 'Shared'}</p>
                         </div>
                         <div class="text-right flex flex-col items-end">
                             <div class="font-mono font-bold text-slate-800 text-sm mb-1">${exp.currency} ${exp.amount.toFixed(2)}</div>
-                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition absolute right-3 bottom-3 md:static">
-                                <button onclick="window.app.editExpense('${exp.id}')" class="text-slate-300 hover:text-indigo-600 text-xs p-1"><i class="fa-solid fa-pencil"></i></button>
-                                <button onclick="window.app.requestDeleteExpense('${exp.id}')" class="text-slate-300 hover:text-red-500 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
+                            <div class="flex gap-2 transition absolute right-3 bottom-2 md:static md:opacity-0 md:group-hover:opacity-100 opacity-100">
+                                <button onclick="window.app.editExpense('${exp.id}')" class="text-slate-400 md:text-slate-300 hover:text-indigo-600 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-pencil"></i></button>
+                                <button onclick="window.app.requestDeleteExpense('${exp.id}')" class="text-slate-400 md:text-slate-300 hover:text-red-500 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                     `;
@@ -571,16 +759,24 @@
                 });
             },
             renderManageMembers: () => {
+                if (!currentTripId) return;
                 const trip = localTrips.find(t => t.id === currentTripId);
+                if (!trip) return;
                 const list = document.getElementById('members-list-manage');
                 list.innerHTML = '';
                 trip.members.forEach(m => {
                     const div = document.createElement('div');
+                    const isEmail = m.includes('@');
                     div.className = 'flex justify-between items-center p-3 border-b border-slate-100 last:border-0';
                     div.innerHTML = `
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">${m.charAt(0).toUpperCase()}</div>
-                            <span class="text-sm font-medium text-slate-700">${m === currentUser ? 'You' : m}</span>
+                            <div class="w-8 h-8 rounded-full ${isEmail ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'} flex items-center justify-center text-xs font-bold">
+                                ${isEmail ? '<i class="fa-solid fa-user-check"></i>' : m.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-slate-700">${window.app.getDisplayName(m)}</span>
+                                ${isEmail ? '<span class="text-[10px] text-slate-400">Registered User</span>' : ''}
+                            </div>
                         </div>
                         ${m !== currentUser ? `<button onclick="window.app.removeMember('${m}')" class="text-red-400 hover:text-red-600 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
                     `;
@@ -603,7 +799,7 @@
                 const btn = document.getElementById('btn-consolidate');
                 const knob = btn.firstElementChild;
                 const options = document.getElementById('consolidation-options');
-                if(state.consolidate) {
+                if (state.consolidate) {
                     btn.classList.replace('bg-slate-300', 'bg-indigo-600');
                     knob.classList.add('translate-x-4');
                     options.classList.remove('hidden');
@@ -621,9 +817,9 @@
                     const response = await fetch(`https://api.freecurrencyapi.com/v1/latest?apikey=${DEFAULT_API_KEY}`);
                     if (!response.ok) throw new Error('API Error');
                     const data = await response.json();
-                    if(data && data.data) {
+                    if (data && data.data) {
                         RATES = data.data;
-                        if(!RATES['USD']) RATES['USD'] = 1;
+                        if (!RATES['USD']) RATES['USD'] = 1;
                         CURRENCY_CODES = Object.keys(RATES).sort();
                         USING_LIVE_RATES = true;
                         ui.showToast('Rates updated!');
@@ -643,12 +839,12 @@
                 const planDiv = document.getElementById('settlement-plan');
                 planDiv.innerHTML = '';
                 const expenses = localExpenses.filter(e => !e.notShared);
-                if(expenses.length === 0) {
+                if (expenses.length === 0) {
                     planDiv.innerHTML = '<div class="text-center py-8 text-slate-400">No shared expenses.</div>';
                     window.app.renderCharts([]);
                     return;
                 }
-                
+
                 const generateDebts = (expList, targetCurr) => {
                     const balances = {};
                     trip.members.forEach(m => balances[m] = 0);
@@ -659,27 +855,27 @@
                         trip.members.forEach(m => balances[m] -= split);
                     });
                     let debtors = [], creditors = [];
-                    for(const [p, amt] of Object.entries(balances)) {
-                        if(amt < -0.01) debtors.push({p, amt});
-                        if(amt > 0.01) creditors.push({p, amt});
+                    for (const [p, amt] of Object.entries(balances)) {
+                        if (amt < -0.01) debtors.push({ p, amt });
+                        if (amt > 0.01) creditors.push({ p, amt });
                     }
-                    debtors.sort((a,b) => a.amt - b.amt);
-                    creditors.sort((a,b) => b.amt - a.amt);
+                    debtors.sort((a, b) => a.amt - b.amt);
+                    creditors.sort((a, b) => b.amt - a.amt);
                     const debts = [];
-                    let i=0, j=0;
-                    while(i < debtors.length && j < creditors.length) {
+                    let i = 0, j = 0;
+                    while (i < debtors.length && j < creditors.length) {
                         let d = debtors[i], c = creditors[j];
                         let settleAmt = Math.min(Math.abs(d.amt), c.amt);
                         debts.push({ from: d.p, to: c.p, amt: settleAmt, curr: targetCurr });
                         d.amt += settleAmt; c.amt -= settleAmt;
-                        if(Math.abs(d.amt) < 0.01) i++;
-                        if(c.amt < 0.01) j++;
+                        if (Math.abs(d.amt) < 0.01) i++;
+                        if (c.amt < 0.01) j++;
                     }
                     return debts;
                 };
 
                 let allDebts = [];
-                if(state.consolidate) {
+                if (state.consolidate) {
                     const targetCurr = document.getElementById('settle-currency-select').value || trip.currency;
                     allDebts = generateDebts(expenses, targetCurr);
                 } else {
@@ -689,38 +885,74 @@
                     });
                 }
 
-                if(allDebts.length === 0) planDiv.innerHTML = '<div class="text-center text-green-600 font-bold p-4">All settled!</div>';
+                if (allDebts.length === 0) planDiv.innerHTML = '<div class="text-center text-green-600 font-bold p-4">All settled!</div>';
                 allDebts.forEach(d => {
                     const row = document.createElement('div');
                     row.className = 'flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm';
                     row.innerHTML = `
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold text-sm">${d.from.charAt(0).toUpperCase()}</div>
-                            <div class="flex flex-col"><span class="text-sm font-bold text-slate-800">${d.from === currentUser ? 'You' : d.from}</span><span class="text-xs text-slate-400">pays <span class="text-slate-600 font-medium">${d.to === currentUser ? 'You' : d.to}</span></span></div>
+                            <div class="flex flex-col"><span class="text-sm font-bold text-slate-800">${window.app.getDisplayName(d.from)}</span><span class="text-xs text-slate-400">pays <span class="text-slate-600 font-medium">${window.app.getDisplayName(d.to)}</span></span></div>
                         </div>
                         <div class="text-right"><div class="font-mono font-bold text-slate-800 text-lg">${d.curr} ${d.amt.toFixed(2)}</div></div>
                     `;
                     planDiv.appendChild(row);
                 });
-                window.app.renderCharts(expenses);
+
+                // Determine currency for charts
+                const targetCurrency = state.consolidate ? (document.getElementById('settle-currency-select').value || trip.currency) : trip.currency;
+                window.app.renderCharts(expenses, targetCurrency);
             },
-            renderCharts: (expenses) => {
+            renderCharts: (expenses, targetCurrency) => {
                 const catTotals = {}, payerTotals = {};
                 expenses.forEach(e => {
-                    const val = util.convert(e.amount, e.currency, 'USD');
+                    // Use targetCurrency instead of hardcoded USD
+                    const val = util.convert(e.amount, e.currency, targetCurrency);
                     catTotals[e.category] = (catTotals[e.category] || 0) + val;
                     payerTotals[e.payer] = (payerTotals[e.payer] || 0) + val;
                 });
                 const renderChart = (id, data, type) => {
-                    if(charts[type]) charts[type].destroy();
+                    if (charts[type]) charts[type].destroy();
                     const ctx = document.getElementById(id).getContext('2d');
+
+                    // Render Chart
                     charts[type] = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(data),
                             datasets: [{ data: Object.values(data), backgroundColor: ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#94a3b8'], borderWidth: 0 }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } }, cutout: '70%' }
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
+                    });
+
+                    // Render Custom Legend/List
+                    const legendId = id + '-legend';
+                    let legendContainer = document.getElementById(legendId);
+
+                    if (!legendContainer) {
+                        legendContainer = document.createElement('div');
+                        legendContainer.id = legendId;
+                        legendContainer.className = 'mt-6 space-y-2'; // Removed max-h constraint, added more top margin
+                        // Fix: Append to the card container (parent of the fixed height wrapper) to avoid cutoff
+                        const chartWrapper = document.getElementById(id).parentNode;
+                        chartWrapper.parentNode.appendChild(legendContainer);
+                    }
+                    legendContainer.innerHTML = '';
+
+                    Object.entries(data).forEach(([key, val], idx) => {
+                        const color = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#94a3b8'][idx % 6];
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center text-xs';
+                        // Resolve display name if type is payer
+                        const label = type === 'payer' ? window.app.getDisplayName(key) : key;
+                        div.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span>
+                                <span class="text-slate-600 font-medium truncate w-24">${label}</span>
+                            </div>
+                            <span class="font-bold text-slate-800">${targetCurrency} ${val.toFixed(2)}</span>
+                         `;
+                        legendContainer.appendChild(div);
                     });
                 };
                 renderChart('chart-categories', catTotals, 'cat');
@@ -729,9 +961,30 @@
 
             // --- UI HELPERS ---
             openModal: (id) => {
-                document.getElementById(id).classList.remove('hidden');
-                if (id === 'modal-add-expense') window.app.prepareAddExpenseModal();
-                if (id === 'modal-members') window.app.renderManageMembers();
+                try {
+                    const modal = document.getElementById(id);
+                    if (modal) modal.classList.remove('hidden');
+
+                    // Run setup logic in next tick to avoid blocking render
+                    setTimeout(() => {
+                        try {
+                            if (id === 'modal-add-expense') window.app.prepareAddExpenseModal();
+                            if (id === 'modal-members') window.app.renderManageMembers();
+                            if (id === 'modal-settings') {
+                                const input = document.getElementById('setting-display-name');
+                                if (input) {
+                                    const currentName = (userProfiles && currentUser && userProfiles[currentUser]) || '';
+                                    input.value = currentName;
+                                }
+                            }
+                        } catch (innerError) {
+                            console.error("Modal Setup Error:", innerError);
+                            ui.showToast("Error loading modal details", 'error');
+                        }
+                    }, 0);
+                } catch (error) {
+                    console.error("OpenModal Error:", error);
+                }
             },
             closeModals: () => {
                 document.querySelectorAll('[id^="modal-"]').forEach(el => el.classList.add('hidden'));
@@ -748,17 +1001,24 @@
                 if (tab === 'settle') window.app.renderSettlement();
             },
             prepareAddExpenseModal: () => {
+                if (!currentTripId) return; // Guard
                 const trip = localTrips.find(t => t.id === currentTripId);
+                if (!trip) return;
+
                 const title = document.getElementById('expense-modal-title');
                 const btn = document.getElementById('expense-modal-btn');
-                
+
                 const currSelect = document.getElementById('exp-currency');
                 currSelect.innerHTML = '';
                 [trip.currency, ...CURRENCY_CODES.filter(c => c !== trip.currency)].forEach(c => currSelect.add(new Option(c, c)));
 
                 const payerSelect = document.getElementById('exp-payer');
                 payerSelect.innerHTML = '';
-                trip.members.forEach(m => payerSelect.add(new Option(m === currentUser ? 'You' : m, m)));
+                trip.members.forEach(m => payerSelect.add(new Option(window.app.getDisplayName(m), m)));
+                // Default to current user for new expenses
+                if (!editingExpenseId) {
+                    payerSelect.value = currentUser;
+                }
 
                 const catGrid = document.getElementById('category-grid');
                 catGrid.innerHTML = '';
@@ -786,14 +1046,14 @@
                     document.getElementById('exp-not-shared').checked = exp.notShared;
                     // Auto-select category visual
                     const index = CATEGORIES.findIndex(c => c.id === exp.category);
-                    if(index > -1 && catGrid.children[index]) catGrid.children[index].click();
+                    if (index > -1 && catGrid.children[index]) catGrid.children[index].click();
                 } else {
                     title.innerText = "Add Expense";
                     btn.innerText = "Save Expense";
                     document.getElementById('exp-desc').value = '';
                     document.getElementById('exp-amount').value = '';
                     document.getElementById('exp-not-shared').checked = false;
-                    if(catGrid.firstChild) catGrid.firstChild.click();
+                    if (catGrid.firstChild) catGrid.firstChild.click();
                 }
             },
             editExpense: (id) => {
@@ -804,7 +1064,7 @@
 
         const util = {
             convert: (amount, from, to) => {
-                if(from === to) return amount;
+                if (from === to) return amount;
                 const inUSD = amount / (RATES[from] || 1);
                 return inUSD * (RATES[to] || 1);
             }
@@ -825,10 +1085,11 @@
         document.getElementById('btn-login').onclick = window.app.login;
         document.getElementById('btn-logout').onclick = window.app.logout;
         window.addEventListener('resize', () => {
-             if(window.innerWidth >= 768 && currentUser && !document.getElementById('view-trip').classList.contains('hidden')) {
-                 document.getElementById('view-dashboard').classList.remove('hidden');
-             }
+            if (window.innerWidth >= 768 && currentUser && !document.getElementById('view-trip').classList.contains('hidden')) {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+            }
         });
     </script>
 </body>
+
 </html>
