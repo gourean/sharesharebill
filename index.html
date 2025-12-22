@@ -459,7 +459,8 @@
             'USD': 1.0, 'EUR': 0.95, 'GBP': 0.79, 'JPY': 150.0, 'CNY': 7.15,
             'MYR': 4.45, 'SGD': 1.35, 'AUD': 1.52, 'CAD': 1.36, 'CHF': 0.88,
             'INR': 83.3, 'HKD': 7.82, 'NZD': 1.63, 'THB': 35.5, 'IDR': 15500,
-            'VND': 24500, 'PHP': 55.8, 'KRW': 1300
+            'VND': 24500, 'PHP': 55.8, 'KRW': 1300, 'TWD': 31.5, 'BDT': 109.5,
+            'LKR': 324.0, 'PKR': 278.5, 'NPR': 133.2
         };
         let CURRENCY_CODES = Object.keys(RATES).sort();
         let USING_LIVE_RATES = false;
@@ -561,7 +562,7 @@
                     });
 
                     window.app.renderTripList();
-                    // On desktop, auto-open first trip if none selected
+                    // On desktop, auto-open first trip if exists after data loads (handled in snapshot)
                     if (window.innerWidth >= 768 && !currentTripId && localTrips.length > 0) {
                         window.app.openTrip(localTrips[0].id);
                     }
@@ -1109,20 +1110,31 @@
                     const el = document.createElement('div');
                     el.className = 'flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200';
                     el.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
-                                    ${window.app.getDisplayName(d.from).charAt(0)}
+                            <div class="flex items-center gap-3 flex-1">
+                                <div class="flex flex-col items-center gap-1 min-w-[3rem]">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 border-2 border-white shadow-sm" title="${window.app.getDisplayName(d.from)}">
+                                        ${window.app.getDisplayName(d.from).substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <span class="text-[10px] text-slate-500 font-bold truncate max-w-[4rem]">${window.app.getDisplayName(d.from)}</span>
                                 </div>
-                                <div class="flex flex-col">
-                                    <span class="text-xs text-slate-500 font-bold uppercase">Owes</span>
-                                    <span class="font-bold text-slate-800">${window.app.getDisplayName(d.to)}</span>
+                                
+                                <div class="flex flex-col items-center flex-1">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Pays</span>
+                                    <div class="h-[1px] w-full bg-slate-300 relative">
+                                        <i class="fa-solid fa-chevron-right absolute -right-1 -top-2 text-slate-300"></i>
+                                    </div>
+                                    <span class="font-bold text-indigo-600 text-sm mt-1">${d.curr} ${d.amt.toFixed(2)}</span>
+                                </div>
+
+                                <div class="flex flex-col items-center gap-1 min-w-[3rem]">
+                                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700 border-2 border-white shadow-sm" title="${window.app.getDisplayName(d.to)}">
+                                        ${window.app.getDisplayName(d.to).substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <span class="text-[10px] text-slate-500 font-bold truncate max-w-[4rem]">${window.app.getDisplayName(d.to)}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="text-right">
-                                    <div class="font-bold text-slate-800">${d.curr} ${d.amt.toFixed(2)}</div>
-                                </div>
-                                <button onclick="window.app.openSettleModal('${d.from}', '${d.to}', ${d.amt}, '${d.curr}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-lg shadow transition">
+                            <div class="ml-4 pl-4 border-l border-slate-100">
+                                <button onclick="window.app.openSettleModal('${d.from}', '${d.to}', ${d.amt}, '${d.curr}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm shadow-indigo-200 transition active:scale-95">
                                     Settle
                                 </button>
                             </div>
@@ -1352,7 +1364,7 @@
                     title.innerText = "Start New Trip";
                     btn.innerText = "Create Trip";
                     nameIn.value = '';
-                    currIn.value = 'USD'; // Default
+                    currIn.value = 'MYR'; // Default
                     memIn.value = '';
                 }
                 window.app.openModal('modal-create-trip');
