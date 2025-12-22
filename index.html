@@ -113,7 +113,7 @@
             </div>
 
             <div class="p-4 bg-white border-t border-slate-100">
-                <button onclick="window.app.openModal('modal-create-trip')"
+                <button onclick="window.app.openCreateTripModal()"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition active:scale-[0.98] flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus"></i> New Trip
                 </button>
@@ -249,7 +249,7 @@
         class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden slide-in">
             <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800">Start New Trip</h3>
+                <h3 id="create-trip-title" class="font-bold text-lg text-slate-800">Start New Trip</h3>
                 <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
                         class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
@@ -261,7 +261,7 @@
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Members</label><input type="text"
                         id="new-trip-members" class="w-full border rounded-lg px-3 py-2 outline-none"
                         placeholder="Alice, Bob..."></div>
-                <button onclick="window.app.createTrip()"
+                <button onclick="window.app.saveTrip()" id="create-trip-btn"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl mt-2 shadow-md">Create
                     Trip</button>
             </div>
@@ -416,6 +416,7 @@
         let state = { consolidate: false };
         let pendingAction = null;
         let editingExpenseId = null;
+        let editingTripId = null;
 
         // --- AUTH LISTENER ---
         onAuthStateChanged(auth, (user) => {
@@ -537,7 +538,7 @@
             },
 
             // DATA OPERATIONS (WRITE)
-            createTrip: async () => {
+            saveTrip: async () => {
                 const name = document.getElementById('new-trip-name').value;
                 const currency = document.getElementById('new-trip-currency').value;
                 const membersRaw = document.getElementById('new-trip-members').value;
@@ -547,16 +548,25 @@
                 if (!members.includes(currentUser)) members.unshift(currentUser); // Add admin
 
                 try {
-                    const docRef = await addDoc(collection(db, "trips"), {
-                        name, currency, members,
-                        createdBy: currentUser,
-                        createdAt: serverTimestamp()
-                    });
+                    if (editingTripId) {
+                        // Update existing trip
+                        await updateDoc(doc(db, "trips", editingTripId), {
+                            name, currency, members
+                        });
+                        ui.showToast('Trip updated!');
+                    } else {
+                        // Create new trip
+                        const docRef = await addDoc(collection(db, "trips"), {
+                            name, currency, members,
+                            createdBy: currentUser,
+                            createdAt: serverTimestamp()
+                        });
+                        ui.showToast('Trip created!');
+                        window.app.openTrip(docRef.id);
+                    }
                     window.app.closeModals();
-                    ui.showToast('Trip created!');
-                    window.app.openTrip(docRef.id);
                 } catch (e) {
-                    ui.showToast("Error creating trip: " + e.message, 'error');
+                    ui.showToast("Error saving trip: " + e.message, 'error');
                 }
             },
             saveExpense: async () => {
@@ -700,7 +710,8 @@
                         </div>
                         <div class="flex items-center gap-2 relative z-10">
                             ${trip.createdBy === currentUser ?
-                            `<button onclick="window.app.requestDeleteTrip(event, '${trip.id}')" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-red-100 hover:text-red-500 transition active:bg-red-200"><i class="fa-solid fa-trash-can"></i></button>`
+                            `<button onclick="event.stopPropagation(); window.app.openCreateTripModal('${trip.id}')" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition active:bg-indigo-200"><i class="fa-solid fa-pen"></i></button>
+                                 <button onclick="window.app.requestDeleteTrip(event, '${trip.id}')" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-red-100 hover:text-red-500 transition active:bg-red-200"><i class="fa-solid fa-trash-can"></i></button>`
                             : ''}
                         </div>
                     `;
@@ -749,7 +760,8 @@
                         </div>
                         <div class="text-right flex flex-col items-end">
                             <div class="font-mono font-bold text-slate-800 text-sm mb-1">${exp.currency} ${exp.amount.toFixed(2)}</div>
-                            <div class="flex gap-2 transition absolute right-3 bottom-2 md:static md:opacity-0 md:group-hover:opacity-100 opacity-100">
+                            <!-- Fix: Static flow for ALL screens. Desktop just hides opacity. -->
+                            <div class="flex gap-2 mt-1 transition md:opacity-0 md:group-hover:opacity-100 opacity-100">
                                 <button onclick="window.app.editExpense('${exp.id}')" class="text-slate-400 md:text-slate-300 hover:text-indigo-600 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-pencil"></i></button>
                                 <button onclick="window.app.requestDeleteExpense('${exp.id}')" class="text-slate-400 md:text-slate-300 hover:text-red-500 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-trash"></i></button>
                             </div>
@@ -969,6 +981,7 @@
                     setTimeout(() => {
                         try {
                             if (id === 'modal-add-expense') window.app.prepareAddExpenseModal();
+                            if (id === 'modal-new-trip') window.app.prepareNewTripModal();
                             if (id === 'modal-members') window.app.renderManageMembers();
                             if (id === 'modal-settings') {
                                 const input = document.getElementById('setting-display-name');
@@ -989,6 +1002,7 @@
             closeModals: () => {
                 document.querySelectorAll('[id^="modal-"]').forEach(el => el.classList.add('hidden'));
                 editingExpenseId = null;
+                editingTripId = null;
             },
             switchTab: (tab) => {
                 document.getElementById('tab-expenses').classList.add('hidden');
@@ -1055,6 +1069,32 @@
                     document.getElementById('exp-not-shared').checked = false;
                     if (catGrid.firstChild) catGrid.firstChild.click();
                 }
+            },
+            openCreateTripModal: (tripId = null) => {
+                editingTripId = tripId;
+                const title = document.getElementById('create-trip-title');
+                const btn = document.getElementById('create-trip-btn');
+                const nameIn = document.getElementById('new-trip-name');
+                const currIn = document.getElementById('new-trip-currency');
+                const memIn = document.getElementById('new-trip-members');
+
+                // Reset or Prefill
+                if (tripId) {
+                    const trip = localTrips.find(t => t.id === tripId);
+                    if (!trip) return;
+                    title.innerText = "Edit Trip";
+                    btn.innerText = "Save Changes";
+                    nameIn.value = trip.name;
+                    currIn.value = trip.currency;
+                    memIn.value = trip.members.join(', ');
+                } else {
+                    title.innerText = "Start New Trip";
+                    btn.innerText = "Create Trip";
+                    nameIn.value = '';
+                    currIn.value = 'USD'; // Default
+                    memIn.value = '';
+                }
+                window.app.openModal('modal-create-trip');
             },
             editExpense: (id) => {
                 editingExpenseId = id;
