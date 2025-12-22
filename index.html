@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ShareShare Bill</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -155,6 +155,8 @@
                 <button onclick="window.app.switchTab('settle')" id="tab-btn-settle"
                     class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Settle
                     Up</button>
+                <button onclick="window.app.switchTab('history')" id="tab-btn-history"
+                    class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">History</button>
             </div>
 
             <!-- Content Area -->
@@ -212,6 +214,11 @@
                             <div class="h-48 relative"><canvas id="chart-payers"></canvas></div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Tab: History -->
+                <div id="tab-history" class="h-full overflow-y-auto p-4 pb-24 md:pb-6 space-y-3 hidden">
+                    <div class="text-center text-slate-400 mt-10">No settlement history yet.</div>
                 </div>
 
                 <!-- FAB: Added 'bottom-24' for mobile (Android Chrome bar avoidance) and 'md:bottom-6' for desktop -->
@@ -346,17 +353,81 @@
                     <div class="grid grid-cols-3 gap-3" id="category-grid"></div><input type="hidden" id="exp-category"
                         value="Food">
                 </div>
-                <div class="bg-indigo-50 p-3 rounded-xl flex items-center gap-3 border border-indigo-100">
-                    <input type="checkbox" id="exp-not-shared" class="w-5 h-5 text-indigo-600 rounded">
-                    <div><label for="exp-not-shared" class="text-sm font-bold text-slate-800">Personal
-                            Expense</label>
-                        <p class="text-xs text-slate-500">Don't split this with the group.</p>
+                <!-- Split Options -->
+                <div>
+                    <button type="button" onclick="document.getElementById('split-options').classList.toggle('hidden')"
+                        class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                        <i class="fa-solid fa-sliders"></i> More Options (Split)
+                    </button>
+                    <div id="split-options" class="hidden mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-2 mb-4">
+                            <input type="checkbox" id="exp-not-shared" class="w-4 h-4 text-indigo-600 rounded"
+                                onchange="window.app.toggleSplitUI()">
+                            <label for="exp-not-shared" class="text-sm font-bold text-slate-700">Personal Expense (Don't
+                                Split)</label>
+
+
+                            <div id="split-logic-container">
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Split
+                                    Method</label>
+                                <div class="flex bg-white rounded-lg p-1 border border-slate-200 mb-3">
+                                    <button type="button" onclick="window.app.setSplitType('equal')"
+                                        id="btn-split-equal"
+                                        class="flex-1 py-1 text-xs font-bold rounded bg-indigo-100 text-indigo-700">Equal</button>
+                                    <button type="button" onclick="window.app.setSplitType('exact')"
+                                        id="btn-split-exact"
+                                        class="flex-1 py-1 text-xs font-bold rounded text-slate-500 hover:bg-slate-50">Exact
+                                        Amount</button>
+                                </div>
+                                <div id="split-members-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                                <p id="split-validation-msg" class="text-xs text-red-500 mt-2 hidden font-bold"></p>
+                            </div>
+                        </div>
                     </div>
+                    <button onclick="window.app.saveExpense()" id="expense-modal-btn"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-md">Save
+                        Expense</button>
                 </div>
-                <button onclick="window.app.saveExpense()" id="expense-modal-btn"
-                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-md">Save
-                    Expense</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Record Payment (Moved out) -->
+    <div id="modal-settle-up"
+        class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-lg text-slate-800">Record Payment</h3>
+                <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+
+            <div class="flex items-center gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="text-center flex-1">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Payer</p>
+                    <p class="font-bold text-slate-800 truncate" id="settle-from-name">Alice</p>
+                </div>
+                <i class="fa-solid fa-arrow-right text-slate-300"></i>
+                <div class="text-center flex-1">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Payee</p>
+                    <p class="font-bold text-slate-800 truncate" id="settle-to-name">Bob</p>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Amount Paid</label>
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold text-slate-400" id="settle-currency-display">USD</span>
+                    <input type="number" id="settle-amount" step="0.01"
+                        class="w-full text-3xl font-bold text-slate-800 border-b-2 border-slate-200 focus:border-indigo-600 outline-none hover:border-slate-300 transition py-2"
+                        placeholder="0.00">
+                </div>
+            </div>
+
+            <button onclick="window.app.saveSettlement()"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-md shadow-green-200 transition active:scale-[0.98]">
+                <i class="fa-solid fa-check mr-2"></i> Record Payment
+            </button>
         </div>
     </div>
 
@@ -399,7 +470,7 @@
             { id: 'Transport', icon: 'fa-bus', color: 'bg-blue-100 text-blue-600 border-blue-200' },
             { id: 'Stay', icon: 'fa-bed', color: 'bg-purple-100 text-purple-600 border-purple-200' },
             { id: 'Flight', icon: 'fa-plane', color: 'bg-sky-100 text-sky-600 border-sky-200' },
-            { id: 'Entmnt', icon: 'fa-ticket', color: 'bg-pink-100 text-pink-600 border-pink-200' },
+            { id: 'Ent.', icon: 'fa-ticket', color: 'bg-pink-100 text-pink-600 border-pink-200' },
             { id: 'Other', icon: 'fa-bag-shopping', color: 'bg-gray-100 text-gray-600 border-gray-200' },
         ];
 
@@ -417,6 +488,8 @@
         let pendingAction = null;
         let editingExpenseId = null;
         let editingTripId = null;
+        let editingSettlementId = null;
+        let currentSplitType = 'equal'; // equal, exact
 
         // --- AUTH LISTENER ---
         onAuthStateChanged(auth, (user) => {
@@ -577,11 +650,34 @@
                 const category = document.getElementById('exp-category').value;
                 const notShared = document.getElementById('exp-not-shared').checked;
 
+                // SPLIT VALIDATION
+                let splitDetails = {};
+                let splitType = currentSplitType;
+
+                if (notShared) {
+                    splitType = 'personal';
+                } else if (splitType === 'exact') {
+                    const inputs = document.querySelectorAll('.split-input');
+                    let sum = 0;
+                    inputs.forEach(inp => {
+                        const val = parseFloat(inp.value) || 0;
+                        splitDetails[inp.dataset.member] = val;
+                        sum += val;
+                    });
+                    if (Math.abs(sum - amount) > 0.05) {
+                        const msg = document.getElementById('split-validation-msg');
+                        msg.innerText = `Total split (${sum.toFixed(2)}) does not match expense amount (${amount.toFixed(2)})`;
+                        msg.classList.remove('hidden');
+                        return;
+                    }
+                }
+
                 if (!desc || isNaN(amount) || amount <= 0) return ui.showToast('Invalid details', 'error');
 
                 const expenseData = {
                     tripId: currentTripId,
                     desc, amount, currency, payer, category, notShared,
+                    splitType, splitDetails,
                     date: serverTimestamp() // Firestore timestamp
                 };
 
@@ -630,12 +726,12 @@
                 document.getElementById('confirm-message').innerText = "Delete this trip and all its expenses?";
                 document.getElementById('modal-confirm').classList.remove('hidden');
             },
-            requestDeleteExpense: (id) => {
+            requestDeleteExpense: (id, type = 'expense') => {
                 pendingAction = async () => {
                     await deleteDoc(doc(db, "expenses", id));
-                    ui.showToast('Expense deleted');
+                    ui.showToast(`${type === 'settlement' ? 'Settlement' : 'Expense'} deleted`);
                 };
-                document.getElementById('confirm-message').innerText = "Delete this expense?";
+                document.getElementById('confirm-message').innerText = type === 'settlement' ? "Delete this settlement?" : "Delete this expense?";
                 document.getElementById('modal-confirm').classList.remove('hidden');
             },
             executeConfirm: () => {
@@ -658,6 +754,10 @@
             },
             removeMember: async (name) => {
                 const trip = localTrips.find(t => t.id === currentTripId);
+                // Protect Owner
+                if (name === trip.createdBy || name === window.app.getDisplayName(trip.createdBy)) {
+                    return ui.showToast("Cannot remove the trip owner", "error");
+                }
                 const newMembers = trip.members.filter(m => m !== name);
                 await updateDoc(doc(db, "trips", currentTripId), { members: newMembers });
                 window.app.renderManageMembers();
@@ -743,12 +843,13 @@
             },
             renderExpenses: () => {
                 const list = document.getElementById('tab-expenses');
-                if (localExpenses.length === 0) {
+                const expenses = localExpenses.filter(e => !e.isSettlement); // Hide settlements
+                if (expenses.length === 0) {
                     list.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-slate-300"><i class="fa-solid fa-receipt text-5xl mb-3"></i><p>No expenses yet</p></div>`;
                     return;
                 }
                 list.innerHTML = '';
-                localExpenses.forEach(exp => {
+                expenses.forEach(exp => {
                     const catObj = CATEGORIES.find(c => c.id === exp.category) || CATEGORIES[5];
                     const el = document.createElement('div');
                     el.className = 'bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 border border-slate-200 group relative';
@@ -759,7 +860,7 @@
                             <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(exp.payer)}</span> • ${exp.notShared ? '<span class="text-red-500 font-bold">Personal</span>' : 'Shared'}</p>
                         </div>
                         <div class="text-right flex flex-col items-end">
-                            <div class="font-mono font-bold text-slate-800 text-sm mb-1">${exp.currency} ${exp.amount.toFixed(2)}</div>
+                            <div class="font-bold text-slate-800 text-sm mb-1">${exp.currency} ${exp.amount.toFixed(2)}</div>
                             <!-- Fix: Static flow for ALL screens. Desktop just hides opacity. -->
                             <div class="flex gap-2 mt-1 transition md:opacity-0 md:group-hover:opacity-100 opacity-100">
                                 <button onclick="window.app.editExpense('${exp.id}')" class="text-slate-400 md:text-slate-300 hover:text-indigo-600 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-pencil"></i></button>
@@ -769,6 +870,92 @@
                     `;
                     list.appendChild(el);
                 });
+            },
+            renderHistory: () => {
+                const list = document.getElementById('tab-history');
+                const settlements = localExpenses.filter(e => e.isSettlement);
+                if (settlements.length === 0) {
+                    list.innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-slate-300"><i class="fa-solid fa-handshake text-5xl mb-3"></i><p>No settlement history</p></div>';
+                    return;
+                }
+                list.innerHTML = '';
+                settlements.forEach(pay => {
+                    const payee = Object.keys(pay.splitDetails)[0]; // Logic: exact split to 1 person
+                    const el = document.createElement('div');
+                    el.className = 'bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 border border-slate-200 group relative';
+                    el.innerHTML = `
+                        <div class="h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0 border border-white shadow-sm"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-slate-800 truncate">Payment</h4>
+                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(pay.payer)}</span> paid <span class="font-semibold text-slate-700">${window.app.getDisplayName(payee)}</span></p>
+                        </div>
+                         <div class="text-right flex flex-col items-end">
+                            <div class="font-bold text-green-600 text-sm mb-1">${pay.currency} ${pay.amount.toFixed(2)}</div>
+                            <div class="flex gap-2 mt-1 transition md:opacity-0 md:group-hover:opacity-100 opacity-100">
+                                <button onclick="window.app.editSettlement('${pay.id}')" class="text-slate-400 md:text-slate-300 hover:text-indigo-600 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-pencil"></i></button>
+                                <button onclick="window.app.requestDeleteExpense('${pay.id}', 'settlement')" class="text-slate-400 md:text-slate-300 hover:text-red-500 text-sm p-3 bg-slate-50 md:bg-transparent rounded-full md:rounded-none shadow-sm md:shadow-none"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(el);
+                });
+            },
+
+            // SETTLEMENT ACTIONS
+            pendingSettle: null,
+            openSettleModal: (from, to, amount, curr) => {
+                // Prevent settling if not logged in user logic? Optional.
+                window.app.pendingSettle = { from, to, amount, curr };
+                document.getElementById('settle-from-name').innerText = window.app.getDisplayName(from);
+                document.getElementById('settle-to-name').innerText = window.app.getDisplayName(to);
+                document.getElementById('settle-currency-display').innerText = curr;
+                document.getElementById('settle-amount').value = amount.toFixed(2);
+                window.app.openModal('modal-settle-up');
+            },
+            editSettlement: (id) => {
+                const pay = localExpenses.find(e => e.id === id);
+                if (!pay) return;
+                editingSettlementId = id;
+                // Reconstruct pendingSettle
+                const payee = Object.keys(pay.splitDetails)[0];
+                window.app.pendingSettle = { from: pay.payer, to: payee, amount: pay.amount, curr: pay.currency };
+                document.getElementById('settle-from-name').innerText = window.app.getDisplayName(pay.payer);
+                document.getElementById('settle-to-name').innerText = window.app.getDisplayName(payee);
+                document.getElementById('settle-currency-display').innerText = pay.currency;
+                document.getElementById('settle-amount').value = pay.amount.toFixed(2);
+                window.app.openModal('modal-settle-up');
+            },
+            saveSettlement: async () => {
+                const amt = parseFloat(document.getElementById('settle-amount').value);
+                if (!window.app.pendingSettle || isNaN(amt) || amt <= 0) return;
+
+                try {
+                    const expenseData = {
+                        tripId: currentTripId,
+                        desc: 'Settlement Payment',
+                        amount: amt,
+                        currency: window.app.pendingSettle.curr,
+                        payer: window.app.pendingSettle.from,
+                        category: 'Settlement',
+                        notShared: false,
+                        isSettlement: true,
+                        splitType: 'exact',
+                        splitDetails: { [window.app.pendingSettle.to]: amt }, // Payee consumes the full amount
+                        date: serverTimestamp()
+                    };
+                    if (editingSettlementId) {
+                        await updateDoc(doc(db, "expenses", editingSettlementId), expenseData);
+                        ui.showToast('Payment updated!');
+                    } else {
+                        await addDoc(collection(db, "expenses"), expenseData);
+                        ui.showToast('Payment recorded!');
+                    }
+                    window.app.closeModals();
+                    // Auto switch to history?
+                    window.app.switchTab('history');
+                } catch (e) {
+                    ui.showToast('Error saving: ' + e.message, 'error');
+                }
             },
             renderManageMembers: () => {
                 if (!currentTripId) return;
@@ -850,6 +1037,11 @@
                 const trip = localTrips.find(t => t.id === currentTripId);
                 const planDiv = document.getElementById('settlement-plan');
                 planDiv.innerHTML = '';
+                // Filter out 'Personal' AND 'Settlement' types for debt calc (Settlements are payments, not new debts)
+                // Actually, logic: 'Settlement' type expenses ARE processed by generateDebts to reduce balances.
+                // But `e.notShared` should handle personal.
+                // We want to process ALL expenses that affect balance.
+                // Settlements have `isSettlement: true`. They affect balance.
                 const expenses = localExpenses.filter(e => !e.notShared);
                 if (expenses.length === 0) {
                     planDiv.innerHTML = '<div class="text-center py-8 text-slate-400">No shared expenses.</div>';
@@ -862,9 +1054,21 @@
                     trip.members.forEach(m => balances[m] = 0);
                     expList.forEach(exp => {
                         const val = state.consolidate ? util.convert(exp.amount, exp.currency, targetCurr) : exp.amount;
-                        const split = val / trip.members.length;
-                        balances[exp.payer] += val;
-                        trip.members.forEach(m => balances[m] -= split);
+                        // Handle Splits
+                        if (exp.splitType === 'exact' && exp.splitDetails) {
+                            // Exact Amount Split
+                            Object.entries(exp.splitDetails).forEach(([member, share]) => {
+                                // Convert share if consolidated
+                                const shareVal = state.consolidate ? util.convert(share, exp.currency, targetCurr) : share;
+                                balances[member] -= shareVal;
+                            });
+                            balances[exp.payer] += val;
+                        } else {
+                            // Default Equal Split
+                            const split = val / trip.members.length;
+                            balances[exp.payer] += val;
+                            trip.members.forEach(m => balances[m] -= split);
+                        }
                     });
                     let debtors = [], creditors = [];
                     for (const [p, amt] of Object.entries(balances)) {
@@ -889,7 +1093,7 @@
                 let allDebts = [];
                 if (state.consolidate) {
                     const targetCurr = document.getElementById('settle-currency-select').value || trip.currency;
-                    allDebts = generateDebts(expenses, targetCurr);
+                    allDebts = [...allDebts, ...generateDebts(expenses, targetCurr)];
                 } else {
                     const distinctCurrencies = [...new Set(expenses.map(e => e.currency))];
                     distinctCurrencies.forEach(c => {
@@ -898,17 +1102,32 @@
                 }
 
                 if (allDebts.length === 0) planDiv.innerHTML = '<div class="text-center text-green-600 font-bold p-4">All settled!</div>';
+                // Sort by Amt
+                allDebts.sort((a, b) => b.amt - a.amt);
+
                 allDebts.forEach(d => {
-                    const row = document.createElement('div');
-                    row.className = 'flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm';
-                    row.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold text-sm">${d.from.charAt(0).toUpperCase()}</div>
-                            <div class="flex flex-col"><span class="text-sm font-bold text-slate-800">${window.app.getDisplayName(d.from)}</span><span class="text-xs text-slate-400">pays <span class="text-slate-600 font-medium">${window.app.getDisplayName(d.to)}</span></span></div>
-                        </div>
-                        <div class="text-right"><div class="font-mono font-bold text-slate-800 text-lg">${d.curr} ${d.amt.toFixed(2)}</div></div>
-                    `;
-                    planDiv.appendChild(row);
+                    const el = document.createElement('div');
+                    el.className = 'flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200';
+                    el.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                                    ${window.app.getDisplayName(d.from).charAt(0)}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500 font-bold uppercase">Owes</span>
+                                    <span class="font-bold text-slate-800">${window.app.getDisplayName(d.to)}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="font-bold text-slate-800">${d.curr} ${d.amt.toFixed(2)}</div>
+                                </div>
+                                <button onclick="window.app.openSettleModal('${d.from}', '${d.to}', ${d.amt}, '${d.curr}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-lg shadow transition">
+                                    Settle
+                                </button>
+                            </div>
+                        `;
+                    planDiv.appendChild(el);
                 });
 
                 // Determine currency for charts
@@ -999,20 +1218,28 @@
                     console.error("OpenModal Error:", error);
                 }
             },
+
             closeModals: () => {
                 document.querySelectorAll('[id^="modal-"]').forEach(el => el.classList.add('hidden'));
                 editingExpenseId = null;
                 editingTripId = null;
+                editingSettlementId = null;
             },
             switchTab: (tab) => {
                 document.getElementById('tab-expenses').classList.add('hidden');
                 document.getElementById('tab-settle').classList.add('hidden');
-                ['expenses', 'settle'].forEach(t => document.getElementById(`tab-btn-${t}`).classList.replace('border-indigo-600', 'border-transparent'));
-                ['expenses', 'settle'].forEach(t => document.getElementById(`tab-btn-${t}`).classList.replace('text-indigo-600', 'text-slate-400'));
-                document.getElementById(`tab-${tab}`).classList.remove('hidden');
-                document.getElementById(`tab-btn-${tab}`).classList.replace('border-transparent', 'border-indigo-600');
-                document.getElementById(`tab-btn-${tab}`).classList.replace('text-slate-400', 'text-indigo-600');
+                document.getElementById('tab-history').classList.add('hidden');
+
+                document.getElementById('tab-btn-expenses').className = "px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+                document.getElementById('tab-btn-settle').className = "px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+                document.getElementById('tab-btn-history').className = "px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+
+                document.getElementById('tab-' + tab).classList.remove('hidden');
+                document.getElementById('tab-btn-' + tab).className = "px-6 py-3 font-medium text-sm border-b-2 border-indigo-600 text-indigo-600 transition";
+
+                // Re-render based on tab
                 if (tab === 'settle') window.app.renderSettlement();
+                if (tab === 'history') window.app.renderHistory();
             },
             prepareAddExpenseModal: () => {
                 if (!currentTripId) return; // Guard
@@ -1022,16 +1249,50 @@
                 const title = document.getElementById('expense-modal-title');
                 const btn = document.getElementById('expense-modal-btn');
 
-                const currSelect = document.getElementById('exp-currency');
-                currSelect.innerHTML = '';
-                [trip.currency, ...CURRENCY_CODES.filter(c => c !== trip.currency)].forEach(c => currSelect.add(new Option(c, c)));
+                // Reset Split UI
+                document.getElementById('split-options').classList.add('hidden');
+                window.app.setSplitType('equal');
+                document.getElementById('exp-not-shared').checked = false;
+                window.app.toggleSplitUI();
 
                 const payerSelect = document.getElementById('exp-payer');
                 payerSelect.innerHTML = '';
-                trip.members.forEach(m => payerSelect.add(new Option(window.app.getDisplayName(m), m)));
-                // Default to current user for new expenses
-                if (!editingExpenseId) {
-                    payerSelect.value = currentUser;
+                trip.members.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.text = window.app.getDisplayName(m);
+                    payerSelect.add(opt);
+                });
+
+                // Populate Split Members (hidden init)
+                window.app.renderSplitMembers();
+
+                // Currency
+                const currencySelect = document.getElementById('exp-currency');
+                currencySelect.innerHTML = '';
+                [trip.currency, ...CURRENCY_CODES.filter(c => c !== trip.currency)].forEach(c => currencySelect.add(new Option(c, c)));
+                // Just ensuring default is set if new
+                if (!editingExpenseId) currencySelect.value = trip.currency;
+                else {
+                    // Edit mode special handling for split (complex to re-hydrate, skipping deep re-hydration of exact split inputs for MVP simplicity or doing basic)
+                    // For now, if editing, we load basic data. Split data loading would require storing it first.
+                    // IMPLEMENTATION NOTE: Loading existing split details is tricky without `splitDetails` in `exp`. 
+                    // Assuming `exp` object structure update in saveExpense first.
+                    const exp = localExpenses.find(e => e.id === editingExpenseId);
+                    if (exp && exp.splitDetails) {
+                        if (exp.splitType !== 'equal') {
+                            document.getElementById('split-options').classList.remove('hidden');
+                            window.app.setSplitType(exp.splitType);
+                            // We need to wait for renderSplitMembers to finish? It is sync.
+                            // Populate inputs
+                            setTimeout(() => {
+                                document.querySelectorAll('.split-input').forEach(inp => {
+                                    const m = inp.dataset.member;
+                                    if (exp.splitDetails[m]) inp.value = exp.splitDetails[m];
+                                });
+                            }, 0);
+                        }
+                    }
                 }
 
                 const catGrid = document.getElementById('category-grid');
@@ -1095,6 +1356,43 @@
                     memIn.value = '';
                 }
                 window.app.openModal('modal-create-trip');
+            },
+            toggleSplitUI: () => {
+                const isPersonal = document.getElementById('exp-not-shared').checked;
+                const container = document.getElementById('split-logic-container');
+                if (isPersonal) {
+                    container.classList.add('opacity-50', 'pointer-events-none');
+                } else {
+                    container.classList.remove('opacity-50', 'pointer-events-none');
+                }
+            },
+            setSplitType: (type) => {
+                currentSplitType = type;
+                document.getElementById('btn-split-equal').className = `flex-1 py-1 text-xs font-bold rounded ${type === 'equal' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`;
+                document.getElementById('btn-split-exact').className = `flex-1 py-1 text-xs font-bold rounded ${type === 'exact' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`;
+                window.app.renderSplitMembers();
+            },
+            renderSplitMembers: () => {
+                const list = document.getElementById('split-members-list');
+                list.innerHTML = '';
+                if (currentSplitType === 'equal') {
+                    list.innerHTML = '<p class="text-xs text-slate-400 text-center italic">Split equally among all members.</p>';
+                    return;
+                }
+                const trip = localTrips.find(t => t.id === currentTripId);
+                const currency = document.getElementById('exp-currency').value;
+                trip.members.forEach(m => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between text-xs';
+                    row.innerHTML = `
+                        <span class="text-slate-600 truncate w-32">${window.app.getDisplayName(m)}</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-slate-400">${currency}</span>
+                            <input type="number" step="0.01" class="split-input w-20 border rounded px-1 py-0.5 text-right outline-none focus:border-indigo-500" placeholder="0.00" data-member="${m}">
+                        </div>
+                    `;
+                    list.appendChild(row);
+                });
             },
             editExpense: (id) => {
                 editingExpenseId = id;
