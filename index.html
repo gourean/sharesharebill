@@ -49,16 +49,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-
-        /* Prevent iOS Zoom on focus */
-        @media screen and (max-width: 768px) {
-
-            input,
-            select,
-            textarea {
-                font-size: 16px !important;
-            }
-        }
     </style>
 </head>
 
@@ -370,28 +360,28 @@
                         <i class="fa-solid fa-sliders"></i> More Options (Split)
                     </button>
                     <div id="split-options" class="hidden mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <div class="flex items-center gap-2 mb-4">
-                            <input type="checkbox" id="exp-not-shared" class="w-4 h-4 text-indigo-600 rounded"
-                                onchange="window.app.toggleSplitUI()">
-                            <label for="exp-not-shared" class="text-sm font-bold text-slate-700">Personal Expense (Don't
-                                Split)</label>
+                        <div class="mb-4">
+                            <!-- Hidden Checkbox for Logic Compatibility -->
+                            <input type="checkbox" id="exp-not-shared" class="hidden">
 
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Split Method</label>
+                            <div class="flex bg-white rounded-lg p-1 border border-slate-200 mb-3">
+                                <button type="button" onclick="window.app.setSplitType('equal')" id="btn-split-equal"
+                                    class="flex-1 py-1.5 text-xs font-bold rounded bg-indigo-100 text-indigo-700">Equal</button>
+                                <button type="button" onclick="window.app.setSplitType('exact')" id="btn-split-exact"
+                                    class="flex-1 py-1.5 text-xs font-bold rounded text-slate-500 hover:bg-slate-50">Exact</button>
+                                <button type="button" onclick="window.app.setSplitType('personal')"
+                                    id="btn-split-personal"
+                                    class="flex-1 py-1.5 text-xs font-bold rounded text-slate-500 hover:bg-slate-50">Personal</button>
+                            </div>
 
                             <div id="split-logic-container">
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Split
-                                    Method</label>
-                                <div class="flex bg-white rounded-lg p-1 border border-slate-200 mb-3">
-                                    <button type="button" onclick="window.app.setSplitType('equal')"
-                                        id="btn-split-equal"
-                                        class="flex-1 py-1 text-xs font-bold rounded bg-indigo-100 text-indigo-700">Equal</button>
-                                    <button type="button" onclick="window.app.setSplitType('exact')"
-                                        id="btn-split-exact"
-                                        class="flex-1 py-1 text-xs font-bold rounded text-slate-500 hover:bg-slate-50">Exact
-                                        Amount</button>
-                                </div>
                                 <div id="split-members-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
                                 <p id="split-validation-msg" class="text-xs text-red-500 mt-2 hidden font-bold"></p>
                             </div>
+                            <!-- Helper text for personal mode -->
+                            <p id="personal-mode-msg" class="text-xs text-slate-400 italic text-center hidden">This
+                                expense will not be shared.</p>
                         </div>
                     </div>
                     <button onclick="window.app.saveExpense()" id="expense-modal-btn"
@@ -1278,9 +1268,9 @@
 
                 // Reset Split UI
                 document.getElementById('split-options').classList.add('hidden');
-                window.app.setSplitType('equal');
                 document.getElementById('exp-not-shared').checked = false;
-                window.app.toggleSplitUI();
+                window.app.setSplitType('equal');
+                // removed toggleSplitUI call since setSplitType handles it
 
                 const payerSelect = document.getElementById('exp-payer');
                 payerSelect.innerHTML = '';
@@ -1346,6 +1336,10 @@
                     document.getElementById('exp-payer').value = exp.payer;
                     document.getElementById('exp-category').value = exp.category;
                     document.getElementById('exp-not-shared').checked = exp.notShared;
+                    if (exp.notShared) {
+                        document.getElementById('split-options').classList.remove('hidden'); // Show options so tab is visible
+                        window.app.setSplitType('personal');
+                    }
                     // Auto-select category visual
                     const index = CATEGORIES.findIndex(c => c.id === exp.category);
                     if (index > -1 && catGrid.children[index]) catGrid.children[index].click();
@@ -1384,20 +1378,34 @@
                 }
                 window.app.openModal('modal-create-trip');
             },
-            toggleSplitUI: () => {
-                const isPersonal = document.getElementById('exp-not-shared').checked;
-                const container = document.getElementById('split-logic-container');
-                if (isPersonal) {
-                    container.classList.add('opacity-50', 'pointer-events-none');
-                } else {
-                    container.classList.remove('opacity-50', 'pointer-events-none');
-                }
-            },
+
+            // toggleSplitUI removed, merged into setSplitType
             setSplitType: (type) => {
                 currentSplitType = type;
-                document.getElementById('btn-split-equal').className = `flex-1 py-1 text-xs font-bold rounded ${type === 'equal' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`;
-                document.getElementById('btn-split-exact').className = `flex-1 py-1 text-xs font-bold rounded ${type === 'exact' ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`;
-                window.app.renderSplitMembers();
+
+                // Update Tabs
+                const baseClass = "flex-1 py-1.5 text-xs font-bold rounded transition ";
+                const activeClass = "bg-indigo-100 text-indigo-700";
+                const inactiveClass = "text-slate-500 hover:bg-slate-50";
+
+                document.getElementById('btn-split-equal').className = baseClass + (type === 'equal' ? activeClass : inactiveClass);
+                document.getElementById('btn-split-exact').className = baseClass + (type === 'exact' ? activeClass : inactiveClass);
+                document.getElementById('btn-split-personal').className = baseClass + (type === 'personal' ? activeClass : inactiveClass);
+
+                const container = document.getElementById('split-logic-container');
+                const personalMsg = document.getElementById('personal-mode-msg');
+                const checkbox = document.getElementById('exp-not-shared');
+
+                if (type === 'personal') {
+                    container.classList.add('hidden');
+                    personalMsg.classList.remove('hidden');
+                    checkbox.checked = true;
+                } else {
+                    container.classList.remove('hidden');
+                    personalMsg.classList.add('hidden');
+                    checkbox.checked = false;
+                    window.app.renderSplitMembers();
+                }
             },
             renderSplitMembers: () => {
                 const list = document.getElementById('split-members-list');
@@ -1412,10 +1420,10 @@
                     const row = document.createElement('div');
                     row.className = 'flex items-center justify-between text-xs';
                     row.innerHTML = `
-                        <span class="text-slate-600 truncate w-32">${window.app.getDisplayName(m)}</span>
-                        <div class="flex items-center gap-1">
-                            <span class="text-slate-400">${currency}</span>
-                            <input type="number" step="0.01" class="split-input w-20 border rounded px-1 py-0.5 text-right outline-none focus:border-indigo-500" placeholder="0.00" data-member="${m}">
+                        <span class="text-slate-600 truncate w-24">${window.app.getDisplayName(m)}</span>
+                        <div class="flex items-center gap-1 flex-1 justify-end">
+                            <span class="text-slate-400 text-xs">${currency}</span>
+                            <input type="number" step="0.01" class="split-input w-full max-w-[8rem] border rounded-lg px-2 py-2 text-right outline-none focus:border-indigo-500 text-base font-bold text-slate-700 bg-slate-50 focus:bg-white transition" placeholder="0.00" data-member="${m}">
                         </div>
                     `;
                     list.appendChild(row);
