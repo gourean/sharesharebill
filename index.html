@@ -839,7 +839,7 @@
                 if (!trip) return;
                 document.getElementById('trip-member-count').innerText = `${trip.members.length} Members`;
                 let total = 0;
-                localExpenses.forEach(e => total += util.convert(e.amount, e.currency, trip.currency));
+                localExpenses.filter(e => !e.isSettlement).forEach(e => total += util.convert(e.amount, e.currency, trip.currency));
                 document.getElementById('trip-total-spent').innerText = `${trip.currency} ${total.toFixed(2)}`;
             },
             renderExpenses: () => {
@@ -1004,6 +1004,11 @@
                     knob.classList.add('translate-x-4');
                     options.classList.remove('hidden');
                     if (!USING_LIVE_RATES) await window.app.fetchExchangeRates();
+
+                    // Set Default to MYR if not set
+                    const sel = document.getElementById('settle-currency-select');
+                    if (sel && sel.value !== 'MYR') sel.value = 'MYR';
+
                 } else {
                     btn.classList.replace('bg-indigo-600', 'bg-slate-300');
                     knob.classList.remove('translate-x-4');
@@ -1144,7 +1149,7 @@
 
                 // Determine currency for charts
                 const targetCurrency = state.consolidate ? (document.getElementById('settle-currency-select').value || trip.currency) : trip.currency;
-                window.app.renderCharts(expenses, targetCurrency);
+                window.app.renderCharts(expenses.filter(e => !e.isSettlement), targetCurrency);
             },
             renderCharts: (expenses, targetCurrency) => {
                 const catTotals = {}, payerTotals = {};
