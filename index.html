@@ -13,6 +13,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        :root {
+            --ios-safe-font-size: 16px;
+        }
+
+        /* Mobile-First: Force 16px to prevent iOS Zoom */
+        input,
+        select,
+        textarea {
+            font-size: var(--ios-safe-font-size) !important;
+        }
+
+        /* Desktop: Standard size */
+        @media (min-width: 768px) {
+
+            input,
+            select,
+            textarea {
+                font-size: 0.875rem !important;
+            }
+        }
+
         body {
             background-color: #f1f5f9;
         }
@@ -49,10 +70,23 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* Prevent Font Scaling & Lock Body for iOS */
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            /* Critical: prevents document scroll on iOS */
+            position: fixed;
+            /* Critical: locks body in place */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
     </style>
 </head>
 
-<body class="text-slate-800 h-screen flex flex-col overflow-hidden font-sans">
+<body class="text-slate-800 flex flex-col font-sans">
 
     <!-- TOAST NOTIFICATION -->
     <div id="toast-container"
@@ -68,17 +102,19 @@
             <h1 class="text-3xl font-bold mb-2 text-slate-900 tracking-tight">ShareShare Bill</h1>
             <p class="text-slate-500 mb-8">Effortless group expense tracking.</p>
 
-            <input type="email" id="login-email"
-                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-base"
-                placeholder="Email">
-            <input type="password" id="login-pass"
-                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-base"
-                placeholder="Password">
+            <form onsubmit="event.preventDefault(); window.app.login();">
+                <input type="email" id="login-email" inputmode="email" autocomplete="email"
+                    class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-base"
+                    placeholder="Email">
+                <input type="password" id="login-pass" autocomplete="current-password"
+                    class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-base"
+                    placeholder="Password">
 
-            <button id="btn-login"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-200 active:scale-[0.98]">
-                Login
-            </button>
+                <button type="submit" id="btn-login"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-200 active:scale-[0.98]">
+                    Login
+                </button>
+            </form>
             <p id="login-error" class="text-red-500 text-sm mt-4 hidden"></p>
             <p class="text-xs text-slate-400 mt-6">Connected to Firebase</p>
         </div>
@@ -88,75 +124,85 @@
     <div id="app-layout" class="flex h-full hidden">
 
         <!-- SIDEBAR -->
+        <!-- SIDEBAR -->
         <aside id="view-dashboard"
-            class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-10 shadow-lg md:shadow-none absolute md:relative inset-0 md:inset-auto">
-            <header class="bg-white px-6 py-4 flex justify-between items-center border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <div class="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm"><i
-                            class="fa-solid fa-wallet"></i></div>
-                    <h2 class="text-xl font-bold text-slate-800">My Trips</h2>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="window.app.openModal('modal-settings')"
-                        class="text-slate-400 hover:text-indigo-600 text-sm transition p-2" title="Settings">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
-                    <button id="btn-logout" class="text-slate-400 hover:text-red-500 text-sm transition p-2"
-                        title="Logout">
-                        <i class="fa-solid fa-sign-out-alt"></i>
-                    </button>
-                </div>
-            </header>
+            class="w-full md:w-96 bg-white border-r border-slate-200 relative h-full overflow-hidden z-10 shadow-lg md:shadow-none absolute md:relative inset-0 md:inset-auto">
 
-            <div id="trips-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
-                <div class="text-center text-slate-400 mt-10">Loading trips...</div>
+            <!-- Sidebar Content Wrapper (Scrollable) -->
+            <div class="h-full overflow-y-auto pb-24 md:pb-6">
+                <header
+                    class="bg-white px-6 py-4 flex justify-between items-center border-b border-slate-100 sticky top-0 z-20">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800">My Trips</h2>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.app.openModal('modal-settings')"
+                            class="text-slate-400 hover:text-indigo-600 text-sm transition p-2" title="Settings">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                        <button id="btn-logout" class="text-slate-400 hover:text-red-500 text-sm transition p-2"
+                            title="Logout">
+                            <i class="fa-solid fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <div id="trips-list" class="p-4 space-y-3 bg-slate-50 min-h-[calc(100%-8rem)]">
+                    <div class="text-center text-slate-400 mt-10">Loading trips...</div>
+                </div>
             </div>
 
-            <div class="p-4 bg-white border-t border-slate-100">
-                <button onclick="window.app.openCreateTripModal()"
-                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition active:scale-[0.98] flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus"></i> New Trip
-                </button>
-            </div>
+            <!-- FAB: New Trip -->
+            <button onclick="window.app.openCreateTripModal()"
+                class="absolute bottom-24 md:bottom-6 right-6 h-14 w-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-2xl z-30 transition transform hover:scale-110 active:scale-95">
+                <i class="fa-solid fa-plus"></i>
+            </button>
         </aside>
 
         <!-- MAIN CONTENT -->
         <main id="view-trip"
             class="flex-1 bg-slate-100 flex flex-col relative hidden md:flex w-full absolute md:relative inset-0 z-20 md:z-0">
 
-            <!-- Trip Header -->
-            <div
-                class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm sticky top-0 z-20">
-                <div class="flex items-center gap-4">
-                    <button onclick="window.app.navigateTo('view-dashboard')"
-                        class="md:hidden text-slate-500 hover:text-slate-800"><i
-                            class="fa-solid fa-arrow-left fa-lg"></i></button>
-                    <div>
-                        <h2 id="trip-title" class="text-2xl font-bold text-slate-800 leading-tight">Select a Trip</h2>
-                        <div class="flex items-center gap-2 text-sm text-slate-500">
-                            <span id="trip-base-currency"
-                                class="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono font-bold text-slate-600">---</span>
-                            <span id="trip-member-count">0 Members</span>
-                            <button onclick="window.app.openModal('modal-members')"
-                                class="text-indigo-600 hover:text-indigo-800 text-xs font-bold ml-2 underline">Manage</button>
+            <!-- Composite Sticky Header -->
+            <div class="sticky top-0 z-20 bg-white shadow-sm">
+                <!-- Trip Header -->
+                <div class="border-b border-slate-200 px-6 py-4 flex justify-between items-center bg-white">
+                    <div class="flex items-center gap-4">
+                        <button onclick="window.app.navigateTo('view-dashboard')"
+                            class="md:hidden text-slate-500 hover:text-slate-800"><i
+                                class="fa-solid fa-arrow-left fa-lg"></i></button>
+                        <div>
+                            <h2 id="trip-title" class="text-2xl font-bold text-slate-800 leading-tight">Select a Trip
+                            </h2>
+                            <div class="flex items-center gap-2 text-sm text-slate-500">
+                                <span id="trip-base-currency"
+                                    class="bg-slate-200 px-2 py-0.5 rounded text-xs font-mono font-bold text-slate-600">---</span>
+                                <span id="trip-member-count">0 Members</span>
+                                <button onclick="window.app.openModal('modal-members')"
+                                    class="text-indigo-600 hover:text-indigo-800 text-xs font-bold ml-2 underline">Manage</button>
+                            </div>
                         </div>
                     </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Spent</p>
+                        <p id="trip-total-spent" class="text-xl font-bold text-indigo-600">0.00</p>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Spent</p>
-                    <p id="trip-total-spent" class="text-xl font-bold text-indigo-600">0.00</p>
-                </div>
-            </div>
 
-            <!-- Tabs -->
-            <div class="flex px-6 bg-white border-b border-slate-200">
-                <button onclick="window.app.switchTab('expenses')" id="tab-btn-expenses"
-                    class="px-6 py-3 font-medium text-sm border-b-2 border-indigo-600 text-indigo-600 transition">Expenses</button>
-                <button onclick="window.app.switchTab('settle')" id="tab-btn-settle"
-                    class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Settle
-                    Up</button>
-                <button onclick="window.app.switchTab('history')" id="tab-btn-history"
-                    class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">History</button>
+                <!-- Tabs -->
+                <div class="flex px-6 bg-white border-b border-slate-200">
+                    <button onclick="window.app.switchTab('expenses')" id="tab-btn-expenses"
+                        class="px-6 py-3 font-medium text-sm border-b-2 border-indigo-600 text-indigo-600 transition">Expenses</button>
+                    <button onclick="window.app.switchTab('settle')" id="tab-btn-settle"
+                        class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Settle
+                        Up</button>
+                    <button onclick="window.app.switchTab('history')" id="tab-btn-history"
+                        class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">History</button>
+                </div>
             </div>
 
             <!-- Content Area -->
@@ -260,19 +306,21 @@
                 <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
                         class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
-            <div class="p-6 space-y-4">
+            <form class="p-6 space-y-4" onsubmit="event.preventDefault(); window.app.saveTrip();">
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Trip Name</label><input type="text"
-                        id="new-trip-name" class="w-full border rounded-lg px-3 py-2 outline-none text-base"></div>
+                        id="new-trip-name" class="w-full border rounded-lg px-3 py-2 outline-none text-base"
+                        style="font-size: 16px !important;"></div>
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Base Currency</label><select
-                        id="new-trip-currency" class="w-full border rounded-lg px-3 py-2 bg-white text-base"></select>
+                        id="new-trip-currency" class="w-full border rounded-lg px-3 py-2 bg-white text-base"
+                        style="font-size: 16px !important;"></select>
                 </div>
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Members</label><input type="text"
                         id="new-trip-members" class="w-full border rounded-lg px-3 py-2 outline-none text-base"
-                        placeholder="Alice, Bob..."></div>
-                <button onclick="window.app.saveTrip()" id="create-trip-btn"
+                        placeholder="Alice, Bob..." style="font-size: 16px !important;"></div>
+                <button type="submit" id="create-trip-btn"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl mt-2 shadow-md">Create
                     Trip</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -306,19 +354,20 @@
                 <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
                         class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6 space-y-4">
+            <form class="p-6 space-y-4" onsubmit="event.preventDefault(); window.app.saveSettings();">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Display Name</label>
                     <input type="text" id="setting-display-name"
                         class="w-full border rounded-lg px-3 py-2 outline-none text-base" placeholder="Your Name">
+
                     <p class="text-xs text-slate-400 mt-1">This name will be shown to your trip members instead of
                         your
                         email.</p>
                 </div>
-                <button onclick="window.app.saveSettings()"
+                <button type="submit"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md">Save
                     Settings</button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -332,7 +381,7 @@
                 <button onclick="window.app.closeModals()" class="text-slate-400 hover:text-slate-600"><i
                         class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
-            <div class="p-6 space-y-5">
+            <form class="p-6 space-y-5" onsubmit="event.preventDefault(); window.app.saveExpense();">
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label><input
                         type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none text-base"
                         placeholder="Dinner"></div>
@@ -340,8 +389,8 @@
                     <div class="flex-1"><label
                             class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount</label><input
                             type="number" id="exp-amount" step="0.01"
-                            class="w-full border rounded-xl px-3 py-3 outline-none text-xl font-bold"
-                            placeholder="0.00"></div>
+                            class="w-full border rounded-xl px-3 py-3 outline-none text-xl font-bold" placeholder="0.00"
+                            style="font-size: 24px !important;"></div>
                     <div class="w-28"><label
                             class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label><select
                             id="exp-currency"
@@ -385,12 +434,12 @@
                                 expense will not be shared.</p>
                         </div>
                     </div>
-                    <button onclick="window.app.saveExpense()" id="expense-modal-btn"
+                    <button type="submit" id="expense-modal-btn"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-md">Save
                         Expense</button>
-                </div>
-            </div>
+            </form>
         </div>
+    </div>
     </div>
 
     <!-- Modal: Record Payment (Moved out) -->
@@ -555,11 +604,11 @@
                 unsubscribeTrips = onSnapshot(q, (snapshot) => {
                     localTrips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                    // Client-side sorting (Newest first)
+                    // Client-side sorting (Last Modified first, then Created)
                     localTrips.sort((a, b) => {
-                        const dateA = a.createdAt ? a.createdAt.seconds : 0;
-                        const dateB = b.createdAt ? b.createdAt.seconds : 0;
-                        return dateB - dateA;
+                        const timeA = (a.updatedAt || a.createdAt)?.seconds || 0;
+                        const timeB = (b.updatedAt || b.createdAt)?.seconds || 0;
+                        return timeB - timeA;
                     });
 
                     window.app.renderTripList();
@@ -631,10 +680,11 @@
                         ui.showToast('Trip updated!');
                     } else {
                         // Create new trip
-                        const docRef = await addDoc(collection(db, "trips"), {
+                        await addDoc(collection(db, "trips"), {
                             name, currency, members,
                             createdBy: currentUser,
-                            createdAt: serverTimestamp()
+                            createdAt: serverTimestamp(),
+                            updatedAt: serverTimestamp() // Set initial update time
                         });
                         ui.showToast('Trip created!');
                         window.app.openTrip(docRef.id);
@@ -694,6 +744,8 @@
                         await addDoc(collection(db, "expenses"), expenseData);
                         ui.showToast('Expense saved');
                     }
+                    // Trigger Trip Update
+                    await updateDoc(doc(db, "trips", currentTripId), { updatedAt: serverTimestamp() });
                     window.app.closeModals();
                 } catch (e) {
                     ui.showToast("Error saving: " + e.message, 'error');
@@ -731,6 +783,8 @@
             requestDeleteExpense: (id, type = 'expense') => {
                 pendingAction = async () => {
                     await deleteDoc(doc(db, "expenses", id));
+                    // Trigger Trip Update
+                    if (currentTripId) await updateDoc(doc(db, "trips", currentTripId), { updatedAt: serverTimestamp() });
                     ui.showToast(`${type === 'settlement' ? 'Settlement' : 'Expense'} deleted`);
                 };
                 document.getElementById('confirm-message').innerText = type === 'settlement' ? "Delete this settlement?" : "Delete this expense?";
@@ -952,6 +1006,8 @@
                         await addDoc(collection(db, "expenses"), expenseData);
                         ui.showToast('Payment recorded!');
                     }
+                    // Trigger Trip Update
+                    await updateDoc(doc(db, "trips", currentTripId), { updatedAt: serverTimestamp() });
                     window.app.closeModals();
                     // Auto switch to history?
                     window.app.switchTab('history');
@@ -1317,6 +1373,7 @@
                 catGrid.innerHTML = '';
                 CATEGORIES.forEach(cat => {
                     const b = document.createElement('button');
+                    b.type = 'button';
                     b.className = `p-2 rounded-xl border flex flex-col items-center gap-1 transition border-slate-200 hover:bg-slate-50`;
                     b.innerHTML = `<div class="w-8 h-8 rounded-full ${cat.color} flex items-center justify-center text-sm"><i class="fa-solid ${cat.icon}"></i></div><span class="text-[10px] font-bold text-slate-600 uppercase">${cat.id}</span>`;
                     b.onclick = () => {
