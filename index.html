@@ -69,10 +69,10 @@
             <p class="text-slate-500 mb-8">Effortless group expense tracking.</p>
 
             <input type="email" id="login-email"
-                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-base"
                 placeholder="Email">
             <input type="password" id="login-pass"
-                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-base"
                 placeholder="Password">
 
             <button id="btn-login"
@@ -193,7 +193,7 @@
                             <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Calculate everything
                                 in:</label>
                             <select id="settle-currency-select" onchange="window.app.renderSettlement()"
-                                class="w-full bg-white border border-slate-200 rounded p-2 text-sm font-mono"></select>
+                                class="w-full bg-white border border-slate-200 rounded p-2 text-base font-mono"></select>
                             <div class="flex justify-between mt-2">
                                 <p id="rates-source-label" class="text-[10px] text-slate-400 text-right">Source: Offline
                                     Mock Data</p>
@@ -262,11 +262,12 @@
             </div>
             <div class="p-6 space-y-4">
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Trip Name</label><input type="text"
-                        id="new-trip-name" class="w-full border rounded-lg px-3 py-2 outline-none"></div>
+                        id="new-trip-name" class="w-full border rounded-lg px-3 py-2 outline-none text-base"></div>
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Base Currency</label><select
-                        id="new-trip-currency" class="w-full border rounded-lg px-3 py-2 bg-white"></select></div>
+                        id="new-trip-currency" class="w-full border rounded-lg px-3 py-2 bg-white text-base"></select>
+                </div>
                 <div><label class="block text-sm font-bold text-slate-700 mb-1">Members</label><input type="text"
-                        id="new-trip-members" class="w-full border rounded-lg px-3 py-2 outline-none"
+                        id="new-trip-members" class="w-full border rounded-lg px-3 py-2 outline-none text-base"
                         placeholder="Alice, Bob..."></div>
                 <button onclick="window.app.saveTrip()" id="create-trip-btn"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl mt-2 shadow-md">Create
@@ -286,7 +287,7 @@
             </div>
             <div class="p-4 bg-slate-50 border-b">
                 <div class="flex gap-2">
-                    <input type="text" id="add-member-input" class="flex-1 border rounded-lg px-3 py-2 text-sm"
+                    <input type="text" id="add-member-input" class="flex-1 border rounded-lg px-3 py-2 text-base"
                         placeholder="Name or email to invite">
                     <button onclick="window.app.addMember()"
                         class="bg-indigo-600 text-white px-4 rounded-lg text-sm font-bold hover:bg-indigo-700">Add</button>
@@ -308,8 +309,8 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Display Name</label>
-                    <input type="text" id="setting-display-name" class="w-full border rounded-lg px-3 py-2 outline-none"
-                        placeholder="Your Name">
+                    <input type="text" id="setting-display-name"
+                        class="w-full border rounded-lg px-3 py-2 outline-none text-base" placeholder="Your Name">
                     <p class="text-xs text-slate-400 mt-1">This name will be shown to your trip members instead of
                         your
                         email.</p>
@@ -333,7 +334,7 @@
             </div>
             <div class="p-6 space-y-5">
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label><input
-                        type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none"
+                        type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none text-base"
                         placeholder="Dinner"></div>
                 <div class="flex gap-3">
                     <div class="flex-1"><label
@@ -344,11 +345,11 @@
                     <div class="w-28"><label
                             class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label><select
                             id="exp-currency"
-                            class="w-full border rounded-xl px-2 py-3 bg-white font-mono h-[54px] text-sm"></select>
+                            class="w-full border rounded-xl px-2 py-3 bg-white font-mono h-[54px] text-base"></select>
                     </div>
                 </div>
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Paid By</label><select
-                        id="exp-payer" class="w-full border rounded-xl px-3 py-3 bg-white"></select></div>
+                        id="exp-payer" class="w-full border rounded-xl px-3 py-3 bg-white text-base"></select></div>
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
                     <div class="grid grid-cols-3 gap-3" id="category-grid"></div><input type="hidden" id="exp-category"
                         value="Food">
