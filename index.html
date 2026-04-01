@@ -898,7 +898,11 @@
             },
             getDisplayName: (emailOrName) => {
                 if (!emailOrName) return 'Unknown';
-                if (emailOrName === currentUser) return 'You';
+                if (emailOrName === currentUser) {
+                    const profileName = userProfiles && userProfiles[currentUser];
+                    if (profileName && profileName !== currentUser) return profileName;
+                    return 'You';
+                }
                 if (emailOrName.includes('@')) {
                     return (userProfiles && userProfiles[emailOrName]) || emailOrName;
                 }
