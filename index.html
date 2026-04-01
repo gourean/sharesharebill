@@ -250,6 +250,16 @@
                     </div>
 
                     <!-- Charts -->
+                    <div class="flex justify-between items-end mb-4 px-1 mt-8">
+                        <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-indigo-500"></i> Expense Summary
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Currency:</span>
+                            <select id="charts-currency-select" onchange="window.app.renderChartsOnly()"
+                                class="bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-sm font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-100 transition"></select>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-wide">By Category</h3>
@@ -939,6 +949,10 @@
                 document.getElementById('trip-title').innerText = trip.name;
                 document.getElementById('trip-base-currency').innerText = trip.currency;
 
+                // Set summary chart currency to trip currency by default
+                const chartCurr = document.getElementById('charts-currency-select');
+                if (chartCurr) chartCurr.value = trip.currency;
+
                 // Start listening to expenses for this trip
                 window.app.listenToExpenses(id);
 
@@ -1111,11 +1125,25 @@
             refreshCurrencyDropdowns: () => {
                 const newTripCurr = document.getElementById('new-trip-currency');
                 const settleCurr = document.getElementById('settle-currency-select');
-                newTripCurr.innerHTML = ''; settleCurr.innerHTML = '';
+                const chartsCurr = document.getElementById('charts-currency-select');
+                
+                const currNewTrip = newTripCurr ? newTripCurr.value : null;
+                const currSettle = settleCurr ? settleCurr.value : null;
+                const currCharts = chartsCurr ? chartsCurr.value : null;
+
+                if (newTripCurr) newTripCurr.innerHTML = '';
+                if (settleCurr) settleCurr.innerHTML = ''; 
+                if (chartsCurr) chartsCurr.innerHTML = '';
+
                 CURRENCY_CODES.forEach(c => {
-                    newTripCurr.add(new Option(c, c));
-                    settleCurr.add(new Option(c, c));
+                    if (newTripCurr) newTripCurr.add(new Option(c, c));
+                    if (settleCurr) settleCurr.add(new Option(c, c));
+                    if (chartsCurr) chartsCurr.add(new Option(c, c));
                 });
+
+                if (newTripCurr && currNewTrip) newTripCurr.value = currNewTrip;
+                if (settleCurr && currSettle) settleCurr.value = currSettle;
+                if (chartsCurr && currCharts) chartsCurr.value = currCharts;
             },
             toggleConsolidation: async () => {
                 state.consolidate = !state.consolidate;
@@ -1126,7 +1154,7 @@
                     btn.classList.replace('bg-slate-300', 'bg-indigo-600');
                     knob.classList.add('translate-x-4');
                     options.classList.remove('hidden');
-                    if (!USING_LIVE_RATES) await window.app.fetchExchangeRates();
+                    if (!USING_LIVE_RATES) await window.app.fetchExchangeRates(true);
 
                     // Set Default to MYR if not set
                     const sel = document.getElementById('settle-currency-select');
@@ -1139,11 +1167,11 @@
                 }
                 window.app.renderSettlement();
             },
-            fetchExchangeRates: async () => {
+            fetchExchangeRates: async (fromToggle = false) => {
                 try {
                     if (!userApiKey) {
                         ui.showToast('Please set API Key in Settings', 'error');
-                        window.app.toggleConsolidation(); // Toggle back off
+                        if (fromToggle) window.app.toggleConsolidation(); // Toggle back off
                         return;
                     }
                     ui.showToast('Fetching live rates...', 'info');
@@ -1159,12 +1187,15 @@
                         window.app.refreshCurrencyDropdowns();
                         window.app.renderSettlement();
                         const label = document.getElementById('rates-source-label');
-                        label.innerText = "Source: FreeCurrencyAPI (Live)";
-                        label.classList.replace("text-slate-400", "text-green-600");
+                        if (label) {
+                            label.innerText = "Source: FreeCurrencyAPI (Live)";
+                            label.classList.replace("text-slate-400", "text-green-600");
+                        }
                     }
                 } catch (error) {
                     console.error(error);
                     ui.showToast("Using offline rates.", 'error');
+                    if (fromToggle) window.app.toggleConsolidation();
                 }
             },
             renderSettlement: () => {
@@ -1275,9 +1306,22 @@
                     planDiv.appendChild(el);
                 });
 
-                // Determine currency for charts
-                const targetCurrency = state.consolidate ? (document.getElementById('settle-currency-select').value || trip.currency) : trip.currency;
-                window.app.renderCharts(expenses.filter(e => !e.isSettlement), targetCurrency);
+                // Initial charts render with current selection or fallback
+                const chartSelect = document.getElementById('charts-currency-select');
+                if (chartSelect && !chartSelect.value && trip) chartSelect.value = trip.currency;
+                const targetCurrency = chartSelect ? (chartSelect.value || trip.currency) : trip.currency;
+                window.app.renderCharts(localExpenses.filter(e => !e.isSettlement), targetCurrency);
+            },
+            renderChartsOnly: async () => {
+                const trip = localTrips.find(t => t.id === currentTripId);
+                const chartSelect = document.getElementById('charts-currency-select');
+                const targetCurrency = chartSelect ? (chartSelect.value || (trip ? trip.currency : 'USD')) : (trip ? trip.currency : 'USD');
+                
+                if (trip && targetCurrency !== trip.currency && !USING_LIVE_RATES && userApiKey) {
+                    await window.app.fetchExchangeRates(false);
+                }
+
+                window.app.renderCharts(localExpenses.filter(e => !e.isSettlement), targetCurrency);
             },
             renderCharts: (expenses, targetCurrency) => {
                 const catTotals = {}, payerTotals = {}, memberTotals = {};
@@ -1294,7 +1338,7 @@
                         memberTotals[e.payer] = (memberTotals[e.payer] || 0) + val;
                     } else if (e.splitType === 'exact' && e.splitDetails) {
                         for (const [m, share] of Object.entries(e.splitDetails)) {
-                            const shareVal = state.consolidate ? util.convert(share, e.currency, targetCurrency) : share;
+                            const shareVal = util.convert(share, e.currency, targetCurrency);
                             memberTotals[m] = (memberTotals[m] || 0) + shareVal;
                         }
                     } else {
@@ -1319,7 +1363,23 @@
                         options: { 
                             responsive: true, 
                             maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } }, 
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed !== null) {
+                                                label += targetCurrency + ' ' + context.parsed.toFixed(2);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }, 
                             cutout: '70%',
                             onClick: (evt, activeElements) => {
                                 if (activeElements.length > 0) {
@@ -1390,9 +1450,8 @@
                      list.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">No expenses found.</p>';
                 } else {
                      filtered.forEach(exp => {
-                        const targetCurrency = document.getElementById('settle-currency-select').value || trip.currency;
-                        const displayAmt = state.consolidate ? util.convert(exp.amount, exp.currency, targetCurrency) : exp.amount;
-                        const displayCurr = state.consolidate ? targetCurrency : exp.currency;
+                        const displayAmt = exp.amount;
+                        const displayCurr = exp.currency;
                         const dateStr = exp.date ? (exp.date.toDate ? exp.date.toDate().toLocaleDateString() : new Date(exp.date.seconds * 1000).toLocaleDateString()) : '';
                         const el = document.createElement('div');
                         el.className = 'flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition';
