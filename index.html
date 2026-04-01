@@ -250,7 +250,7 @@
                     </div>
 
                     <!-- Charts -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-wide">By Category</h3>
                             <div class="h-48 relative"><canvas id="chart-categories"></canvas></div>
@@ -258,6 +258,10 @@
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-wide">By Payer</h3>
                             <div class="h-48 relative"><canvas id="chart-payers"></canvas></div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-wide">By Member Share</h3>
+                            <div class="h-48 relative"><canvas id="chart-members"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -390,9 +394,13 @@
                         class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
             <form class="p-6 space-y-5" onsubmit="event.preventDefault(); window.app.saveExpense();">
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label><input
-                        type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none text-base"
-                        placeholder="Dinner"></div>
+                <div class="flex gap-3">
+                    <div class="flex-[2]"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label><input
+                            type="text" id="exp-desc" class="w-full border rounded-xl px-3 py-3 outline-none text-base"
+                            placeholder="Dinner"></div>
+                    <div class="flex-1 min-w-0"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label><input
+                            type="date" id="exp-date" class="w-full border rounded-xl px-3 py-3 outline-none text-sm text-slate-600"></div>
+                </div>
                 <div class="flex gap-3">
                     <div class="flex-1"><label
                             class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount</label><input
@@ -480,6 +488,10 @@
                         class="w-full text-3xl font-bold text-slate-800 border-b-2 border-slate-200 focus:border-indigo-600 outline-none hover:border-slate-300 transition py-2"
                         placeholder="0.00">
                 </div>
+                <div class="mt-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Date</label>
+                    <input type="date" id="settle-date" class="w-full border rounded-xl px-3 py-3 outline-none text-base text-slate-600 bg-slate-50">
+                </div>
             </div>
 
             <button onclick="window.app.saveSettlement()"
@@ -489,12 +501,25 @@
         </div>
     </div>
 
+    <!-- Modal: Filtered Expenses -->
+    <div id="modal-filtered-expenses"
+        class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden slide-in flex flex-col max-h-[80vh]">
+            <div class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center sticky top-0">
+                <h3 id="filtered-expenses-title" class="font-bold text-lg text-slate-800">Expenses</h3>
+                <button onclick="document.getElementById('modal-filtered-expenses').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="filtered-expenses-list" class="p-0 overflow-y-auto"></div>
+        </div>
+    </div>
+
     <!-- MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         // Added getDocs import for deletion query
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, orderBy, serverTimestamp, getDocs, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // CONFIG
         const firebaseConfig = {
@@ -639,9 +664,9 @@
                     localExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     // Client-side sorting
                     localExpenses.sort((a, b) => {
-                        const dateA = a.date ? a.date.seconds : 0;
-                        const dateB = b.date ? b.date.seconds : 0;
-                        return dateB - dateA; // DESC
+                        const timeA = a.date ? (a.date.seconds ? a.date.seconds : a.date.getTime() / 1000) : 0;
+                        const timeB = b.date ? (b.date.seconds ? b.date.seconds : b.date.getTime() / 1000) : 0;
+                        return timeB - timeA; // DESC
                     });
 
                     window.app.renderExpenses();
@@ -723,6 +748,7 @@
                 const payer = document.getElementById('exp-payer').value;
                 const category = document.getElementById('exp-category').value;
                 const notShared = document.getElementById('exp-not-shared').checked;
+                const dateStr = document.getElementById('exp-date').value;
 
                 // SPLIT VALIDATION
                 let splitDetails = {};
@@ -748,11 +774,13 @@
 
                 if (!desc || isNaN(amount) || amount <= 0) return ui.showToast('Invalid details', 'error');
 
+                const expenseDate = dateStr ? new Date(dateStr) : new Date();
+
                 const expenseData = {
                     tripId: currentTripId,
                     desc, amount, currency, payer, category, notShared,
                     splitType, splitDetails,
-                    date: serverTimestamp() // Firestore timestamp
+                    date: Timestamp.fromDate(expenseDate)
                 };
 
                 try {
@@ -935,13 +963,14 @@
                 list.innerHTML = '';
                 expenses.forEach(exp => {
                     const catObj = CATEGORIES.find(c => c.id === exp.category) || CATEGORIES[5];
+                    const dateStr = exp.date ? (exp.date.toDate ? exp.date.toDate().toLocaleDateString() : new Date(exp.date.seconds * 1000).toLocaleDateString()) : '';
                     const el = document.createElement('div');
                     el.className = 'bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 border border-slate-200 group relative';
                     el.innerHTML = `
                         <div class="h-10 w-10 rounded-full ${catObj.color} flex items-center justify-center shrink-0 border border-white shadow-sm"><i class="fa-solid ${catObj.icon}"></i></div>
                         <div class="flex-1 min-w-0">
                             <h4 class="font-bold text-slate-800 truncate">${exp.desc}</h4>
-                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(exp.payer)}</span> • ${exp.notShared ? '<span class="text-red-500 font-bold">Personal</span>' : 'Shared'}</p>
+                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(exp.payer)}</span> • ${exp.notShared ? '<span class="text-red-500 font-bold">Personal</span>' : 'Shared'} ${dateStr ? '• ' + dateStr : ''}</p>
                         </div>
                         <div class="text-right flex flex-col items-end">
                             <div class="font-bold text-slate-800 text-sm mb-1">${exp.currency} ${exp.amount.toFixed(2)}</div>
@@ -965,13 +994,14 @@
                 list.innerHTML = '';
                 settlements.forEach(pay => {
                     const payee = Object.keys(pay.splitDetails)[0]; // Logic: exact split to 1 person
+                    const dateStr = pay.date ? (pay.date.toDate ? pay.date.toDate().toLocaleDateString() : new Date(pay.date.seconds * 1000).toLocaleDateString()) : '';
                     const el = document.createElement('div');
                     el.className = 'bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 border border-slate-200 group relative';
                     el.innerHTML = `
                         <div class="h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0 border border-white shadow-sm"><i class="fa-solid fa-money-bill-transfer"></i></div>
                         <div class="flex-1 min-w-0">
                             <h4 class="font-bold text-slate-800 truncate">Payment</h4>
-                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(pay.payer)}</span> paid <span class="font-semibold text-slate-700">${window.app.getDisplayName(payee)}</span></p>
+                            <p class="text-xs text-slate-500 truncate mt-0.5"><span class="font-semibold text-slate-700">${window.app.getDisplayName(pay.payer)}</span> paid <span class="font-semibold text-slate-700">${window.app.getDisplayName(payee)}</span> ${dateStr ? '• ' + dateStr : ''}</p>
                         </div>
                          <div class="text-right flex flex-col items-end">
                             <div class="font-bold text-green-600 text-sm mb-1">${pay.currency} ${pay.amount.toFixed(2)}</div>
@@ -994,6 +1024,7 @@
                 document.getElementById('settle-to-name').innerText = window.app.getDisplayName(to);
                 document.getElementById('settle-currency-display').innerText = curr;
                 document.getElementById('settle-amount').value = amount.toFixed(2);
+                document.getElementById('settle-date').value = new Date().toISOString().split('T')[0];
                 window.app.openModal('modal-settle-up');
             },
             editSettlement: (id) => {
@@ -1007,11 +1038,18 @@
                 document.getElementById('settle-to-name').innerText = window.app.getDisplayName(payee);
                 document.getElementById('settle-currency-display').innerText = pay.currency;
                 document.getElementById('settle-amount').value = pay.amount.toFixed(2);
+                if (pay.date) {
+                    const d = pay.date.toDate ? pay.date.toDate() : new Date(pay.date.seconds * 1000);
+                    document.getElementById('settle-date').value = d.toISOString().split('T')[0];
+                }
                 window.app.openModal('modal-settle-up');
             },
             saveSettlement: async () => {
                 const amt = parseFloat(document.getElementById('settle-amount').value);
+                const dateStr = document.getElementById('settle-date').value;
                 if (!window.app.pendingSettle || isNaN(amt) || amt <= 0) return;
+
+                const settlementDate = dateStr ? new Date(dateStr) : new Date();
 
                 try {
                     const expenseData = {
@@ -1025,7 +1063,7 @@
                         isSettlement: true,
                         splitType: 'exact',
                         splitDetails: { [window.app.pendingSettle.to]: amt }, // Payee consumes the full amount
-                        date: serverTimestamp()
+                        date: Timestamp.fromDate(settlementDate)
                     };
                     if (editingSettlementId) {
                         await updateDoc(doc(db, "expenses", editingSettlementId), expenseData);
@@ -1242,36 +1280,64 @@
                 window.app.renderCharts(expenses.filter(e => !e.isSettlement), targetCurrency);
             },
             renderCharts: (expenses, targetCurrency) => {
-                const catTotals = {}, payerTotals = {};
+                const catTotals = {}, payerTotals = {}, memberTotals = {};
+                const trip = localTrips.find(t => t.id === currentTripId);
+                if (trip) trip.members.forEach(m => memberTotals[m] = 0);
+
                 expenses.forEach(e => {
-                    // Use targetCurrency instead of hardcoded USD
                     const val = util.convert(e.amount, e.currency, targetCurrency);
                     catTotals[e.category] = (catTotals[e.category] || 0) + val;
                     payerTotals[e.payer] = (payerTotals[e.payer] || 0) + val;
+
+                    // Calculate Member Share
+                    if (e.notShared) {
+                        memberTotals[e.payer] = (memberTotals[e.payer] || 0) + val;
+                    } else if (e.splitType === 'exact' && e.splitDetails) {
+                        for (const [m, share] of Object.entries(e.splitDetails)) {
+                            const shareVal = state.consolidate ? util.convert(share, e.currency, targetCurrency) : share;
+                            memberTotals[m] = (memberTotals[m] || 0) + shareVal;
+                        }
+                    } else {
+                        const split = val / (trip ? trip.members.length : 1);
+                        if (trip) {
+                            trip.members.forEach(m => memberTotals[m] = (memberTotals[m] || 0) + split);
+                        } else {
+                            memberTotals[e.payer] = (memberTotals[e.payer] || 0) + split;
+                        }
+                    }
                 });
                 const renderChart = (id, data, type) => {
                     if (charts[type]) charts[type].destroy();
                     const ctx = document.getElementById(id).getContext('2d');
 
-                    // Render Chart
                     charts[type] = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(data),
                             datasets: [{ data: Object.values(data), backgroundColor: ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#94a3b8'], borderWidth: 0 }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } }, 
+                            cutout: '70%',
+                            onClick: (evt, activeElements) => {
+                                if (activeElements.length > 0) {
+                                    const index = activeElements[0].index;
+                                    const labels = Object.keys(data);
+                                    window.app.showFilteredExpenses(type, labels[index]);
+                                }
+                            }
+                        }
                     });
 
-                    // Render Custom Legend/List
                     const legendId = id + '-legend';
                     let legendContainer = document.getElementById(legendId);
 
                     if (!legendContainer) {
                         legendContainer = document.createElement('div');
                         legendContainer.id = legendId;
-                        legendContainer.className = 'mt-6 space-y-2'; // Removed max-h constraint, added more top margin
-                        // Fix: Append to the card container (parent of the fixed height wrapper) to avoid cutoff
+                        legendContainer.className = 'mt-6 space-y-2'; 
                         const chartWrapper = document.getElementById(id).parentNode;
                         chartWrapper.parentNode.appendChild(legendContainer);
                     }
@@ -1280,9 +1346,9 @@
                     Object.entries(data).forEach(([key, val], idx) => {
                         const color = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#94a3b8'][idx % 6];
                         const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center text-xs';
-                        // Resolve display name if type is payer
-                        const label = type === 'payer' ? window.app.getDisplayName(key) : key;
+                        div.className = 'flex justify-between items-center text-xs p-2 rounded cursor-pointer hover:bg-slate-50 transition border border-transparent hover:border-slate-200';
+                        div.onclick = () => window.app.showFilteredExpenses(type, key);
+                        const label = (type === 'payer' || type === 'member') ? window.app.getDisplayName(key) : key;
                         div.innerHTML = `
                             <div class="flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span>
@@ -1295,6 +1361,53 @@
                 };
                 renderChart('chart-categories', catTotals, 'cat');
                 renderChart('chart-payers', payerTotals, 'payer');
+                renderChart('chart-members', memberTotals, 'member');
+            },
+            showFilteredExpenses: (filterType, filterKey) => {
+                const trip = localTrips.find(t => t.id === currentTripId);
+                const list = document.getElementById('filtered-expenses-list');
+                const title = document.getElementById('filtered-expenses-title');
+                list.innerHTML = '';
+                
+                let filtered = [];
+                const expenses = localExpenses.filter(e => !e.isSettlement);
+                if (filterType === 'cat') {
+                    filtered = expenses.filter(e => e.category === filterKey);
+                    title.innerText = `Expenses: ${filterKey}`;
+                } else if (filterType === 'payer') {
+                    filtered = expenses.filter(e => e.payer === filterKey);
+                    title.innerText = `Paid by: ${window.app.getDisplayName(filterKey)}`;
+                } else if (filterType === 'member') {
+                    filtered = expenses.filter(e => {
+                        if (e.notShared) return e.payer === filterKey;
+                        if (e.splitType === 'exact' && e.splitDetails) return e.splitDetails[filterKey] !== undefined;
+                        return trip && trip.members.includes(filterKey);
+                    });
+                    title.innerText = `Share for: ${window.app.getDisplayName(filterKey)}`;
+                }
+
+                if (filtered.length === 0) {
+                     list.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">No expenses found.</p>';
+                } else {
+                     filtered.forEach(exp => {
+                        const targetCurrency = document.getElementById('settle-currency-select').value || trip.currency;
+                        const displayAmt = state.consolidate ? util.convert(exp.amount, exp.currency, targetCurrency) : exp.amount;
+                        const displayCurr = state.consolidate ? targetCurrency : exp.currency;
+                        const dateStr = exp.date ? (exp.date.toDate ? exp.date.toDate().toLocaleDateString() : new Date(exp.date.seconds * 1000).toLocaleDateString()) : '';
+                        const el = document.createElement('div');
+                        el.className = 'flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition';
+                        el.innerHTML = `
+                            <div class="flex flex-col flex-1 min-w-0 pr-4">
+                                <span class="font-bold text-slate-700 text-sm truncate">${exp.desc}</span>
+                                <span class="text-[10px] text-slate-500 truncate">${window.app.getDisplayName(exp.payer)} • ${exp.category} ${dateStr ? '• ' + dateStr : ''}</span>
+                            </div>
+                            <span class="font-bold text-slate-800 text-sm shrink-0">${displayCurr} ${displayAmt.toFixed(2)}</span>
+                        `;
+                        list.appendChild(el);
+                    });
+                }
+                
+                document.getElementById('modal-filtered-expenses').classList.remove('hidden');
             },
 
             // --- UI HELPERS ---
@@ -1431,6 +1544,10 @@
                     document.getElementById('exp-payer').value = exp.payer;
                     document.getElementById('exp-category').value = exp.category;
                     document.getElementById('exp-not-shared').checked = exp.notShared;
+                    if (exp.date) {
+                        const d = exp.date.toDate ? exp.date.toDate() : new Date(exp.date.seconds * 1000);
+                        document.getElementById('exp-date').value = d.toISOString().split('T')[0];
+                    }
                     if (exp.notShared) {
                         document.getElementById('split-options').classList.remove('hidden'); // Show options so tab is visible
                         window.app.setSplitType('personal');
@@ -1444,6 +1561,7 @@
                     document.getElementById('exp-desc').value = '';
                     document.getElementById('exp-amount').value = '';
                     document.getElementById('exp-not-shared').checked = false;
+                    document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
                     if (catGrid.firstChild) catGrid.firstChild.click();
                 }
             },
