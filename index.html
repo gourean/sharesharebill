@@ -1550,6 +1550,10 @@
                     opt.text = window.app.getDisplayName(m);
                     payerSelect.add(opt);
                 });
+                
+                if (trip.members.includes(currentUser)) {
+                    payerSelect.value = currentUser;
+                }
 
                 // Populate Split Members (hidden init)
                 window.app.renderSplitMembers();
